@@ -1,5 +1,6 @@
 package com.cgvsu;
 
+import com.cgvsu.model.ModelPreprocessor;
 import com.cgvsu.render_engine.RenderEngine;
 import javafx.fxml.FXML;
 import javafx.animation.Animation;
@@ -80,6 +81,8 @@ public class GuiController {
         try {
             String fileContent = Files.readString(fileName);
             mesh = ObjReader.read(fileContent);
+            ModelPreprocessor.triangulate(mesh);
+            ModelPreprocessor.recalculateNormals(mesh);
             // todo: обработка ошибок
         } catch (IOException exception) {
 
