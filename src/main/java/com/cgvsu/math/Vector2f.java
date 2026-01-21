@@ -7,5 +7,5 @@ public class Vector2f {
         this.y = y;
     }
 
-    float x, y;
+    public float x, y;
 }

@@ -1,5 +1,7 @@
 package com.cgvsu;
 
+import com.cgvsu.objwriter.ObjWriter;
+import com.cgvsu.objwriter.ObjWriterException;
 import com.cgvsu.render_engine.RenderEngine;
 import javafx.fxml.FXML;
 import javafx.animation.Animation;
@@ -16,6 +18,8 @@ import java.nio.file.Path;
 import java.io.IOException;
 import java.io.File;
 import javax.vecmath.Vector3f;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 import com.cgvsu.model.Model;
 import com.cgvsu.objreader.ObjReader;
@@ -85,6 +89,43 @@ public class GuiController {
 
         }
     }
+
+    @FXML
+    private void onSaveModelMenuItemClick() {
+        if (mesh == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Save");
+            alert.setHeaderText("No model loaded");
+            alert.setContentText("Load a model first.");
+            alert.showAndWait();
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
+        fileChooser.setTitle("Save Model");
+
+        File file = fileChooser.showSaveDialog((Stage) canvas.getScene().getWindow());
+        if (file == null) return;
+
+        try {
+            String objText = ObjWriter.write(mesh);
+            Files.writeString(file.toPath(), objText);
+        } catch (ObjWriterException e) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Save error");
+            alert.setHeaderText("Failed to save OBJ");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+        } catch (IOException e) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Save error");
+            alert.setHeaderText("Failed to write file");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
 
     @FXML
     public void handleCameraForward(ActionEvent actionEvent) {
