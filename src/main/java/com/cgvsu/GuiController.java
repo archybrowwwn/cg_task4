@@ -12,10 +12,6 @@ import com.cgvsu.objwriter.ObjWriterException;
 import com.cgvsu.render_engine.RenderEngine;
 import javafx.fxml.FXML;
 
-// [Илья] Сохранение
-import com.cgvsu.objwriter.ObjWriter;
-import com.cgvsu.objwriter.ObjWriterException;
-
 // [Дима] Обработка модели
 import com.cgvsu.model.ModelPreprocessor;
 
@@ -28,12 +24,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.FileChooser;
 import javafx.util.Duration;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.io.IOException;
-import java.io.File;
 
 
 import com.cgvsu.model.Model;
@@ -110,7 +101,7 @@ public class GuiController {
             }
 
         } catch (IOException exception) {
-            Alert alert = new Alert(AlertType.ERROR);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Could not load model");
             alert.setContentText(exception.getMessage());

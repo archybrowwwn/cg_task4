@@ -263,11 +263,3 @@ public class ObjReader {
         return resolved;
     }
 }
-
-		final int resolved = (objIndex > 0) ? (objIndex - 1) : (currentSize + objIndex);
-		if (resolved < 0 || resolved >= currentSize) {
-			throw new ObjReaderException("Face index out of bounds.", lineInd);
-		}
-		return resolved;
-	}
-}
