@@ -18,6 +18,11 @@ public class Matrix4f {
         this.m = m;
     }
 
+    // [Task 3] Метод для создания единичной матрицы
+    public static Matrix4f identity() {
+        return new Matrix4f();
+    }
+
     public float get(int row, int col) {
         return m[row * 4 + col];
     }
@@ -60,5 +65,59 @@ public class Matrix4f {
             }
         }
         return result;
+    }
+
+    // [Task 3] Матрица Перемещения (Translation)
+    public static Matrix4f translation(float tx, float ty, float tz) {
+        Matrix4f matrix = new Matrix4f();
+        matrix.set(0, 3, tx);
+        matrix.set(1, 3, ty);
+        matrix.set(2, 3, tz);
+        return matrix;
+    }
+
+    // [Task 3] Матрица Масштабирования (Scale)
+    public static Matrix4f scale(float sx, float sy, float sz) {
+        Matrix4f matrix = new Matrix4f();
+        matrix.set(0, 0, sx);
+        matrix.set(1, 1, sy);
+        matrix.set(2, 2, sz);
+        return matrix;
+    }
+
+    // [Task 3] Поворот вокруг оси X
+    public static Matrix4f rotateX(float angleRadians) {
+        Matrix4f matrix = new Matrix4f();
+        float cos = (float) Math.cos(angleRadians);
+        float sin = (float) Math.sin(angleRadians);
+        matrix.set(1, 1, cos);
+        matrix.set(1, 2, -sin);
+        matrix.set(2, 1, sin);
+        matrix.set(2, 2, cos);
+        return matrix;
+    }
+
+    // [Task 3] Поворот вокруг оси Y
+    public static Matrix4f rotateY(float angleRadians) {
+        Matrix4f matrix = new Matrix4f();
+        float cos = (float) Math.cos(angleRadians);
+        float sin = (float) Math.sin(angleRadians);
+        matrix.set(0, 0, cos);
+        matrix.set(0, 2, sin);
+        matrix.set(2, 0, -sin);
+        matrix.set(2, 2, cos);
+        return matrix;
+    }
+
+    // [Task 3] Поворот вокруг оси Z
+    public static Matrix4f rotateZ(float angleRadians) {
+        Matrix4f matrix = new Matrix4f();
+        float cos = (float) Math.cos(angleRadians);
+        float sin = (float) Math.sin(angleRadians);
+        matrix.set(0, 0, cos);
+        matrix.set(0, 1, -sin);
+        matrix.set(1, 0, sin);
+        matrix.set(1, 1, cos);
+        return matrix;
     }
 }

@@ -5,9 +5,12 @@ import java.util.ArrayList;
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector2f;
 import com.cgvsu.math.Vector3f;
-import javafx.scene.canvas.GraphicsContext;
 import com.cgvsu.model.Model;
-import static com.cgvsu.render_engine.GraphicConveyor.*;
+import static com.cgvsu.render_engine.GraphicConveyor.multiplyMatrix4ByVector3;
+import static com.cgvsu.render_engine.GraphicConveyor.rotateScaleTranslate;
+import static com.cgvsu.render_engine.GraphicConveyor.vertexToPoint;
+
+import javafx.scene.canvas.GraphicsContext;
 
 public class RenderEngine {
 
@@ -18,7 +21,8 @@ public class RenderEngine {
             final int width,
             final int height)
     {
-        Matrix4f modelMatrix = rotateScaleTranslate();
+        Matrix4f modelMatrix = rotateScaleTranslate(mesh.getTranslation(), mesh.getRotation(), mesh.getScale());
+
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
 

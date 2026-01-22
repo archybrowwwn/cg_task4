@@ -6,13 +6,18 @@ import com.cgvsu.math.Vector3f;
 
 public class GraphicConveyor {
 
-    public static Matrix4f rotateScaleTranslate() {
-        float[] matrix = new float[]{
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1};
-        return new Matrix4f(matrix);
+    public static Matrix4f rotateScaleTranslate(Vector3f translation, Vector3f rotation, Vector3f scale) {
+        Matrix4f scaleMatrix = Matrix4f.scale(scale.x, scale.y, scale.z);
+
+        Matrix4f rotateXMatrix = Matrix4f.rotateX(rotation.x);
+        Matrix4f rotateYMatrix = Matrix4f.rotateY(rotation.y);
+        Matrix4f rotateZMatrix = Matrix4f.rotateZ(rotation.z);
+
+        Matrix4f rotationMatrix = Matrix4f.multiply(rotateZMatrix, Matrix4f.multiply(rotateYMatrix, rotateXMatrix));
+
+        Matrix4f translationMatrix = Matrix4f.translation(translation.x, translation.y, translation.z);
+
+        return Matrix4f.multiply(translationMatrix, Matrix4f.multiply(rotationMatrix, scaleMatrix));
     }
 
     public static Matrix4f lookAt(Vector3f eye, Vector3f target) {
