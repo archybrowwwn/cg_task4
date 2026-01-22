@@ -1,5 +1,8 @@
 package com.cgvsu;
 
+import com.cgvsu.math.Vector3f;
+import com.cgvsu.objwriter.ObjWriter;
+import com.cgvsu.objwriter.ObjWriterException;
 import com.cgvsu.render_engine.RenderEngine;
 import javafx.fxml.FXML;
 import javafx.animation.Animation;
@@ -7,6 +10,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser;
@@ -15,7 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.IOException;
 import java.io.File;
-import javax.vecmath.Vector3f;
+
 
 import com.cgvsu.model.Model;
 import com.cgvsu.objreader.ObjReader;
@@ -108,13 +112,13 @@ public class GuiController {
             String objText = ObjWriter.write(mesh);
             Files.writeString(file.toPath(), objText);
         } catch (ObjWriterException e) {
-            Alert alert = new Alert(AlertType.ERROR);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Save error");
             alert.setHeaderText("Failed to save OBJ");
             alert.setContentText(e.getMessage());
             alert.showAndWait();
         } catch (IOException e) {
-            Alert alert = new Alert(AlertType.ERROR);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Save error");
             alert.setHeaderText("Failed to write file");
             alert.setContentText(e.getMessage());
