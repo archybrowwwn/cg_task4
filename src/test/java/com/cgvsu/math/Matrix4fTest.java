@@ -57,4 +57,37 @@ class Matrix4fTest {
         Vector3f result = Matrix4f.multiply(m, v);
         Assertions.assertEquals(100, result.x, EPS);
     }
+
+    @Test
+    void testTranslation() {
+        Vector3f v = new Vector3f(1, 1, 1);
+        Matrix4f t = Matrix4f.translation(5, -2, 0);
+        Vector3f res = Matrix4f.multiply(t, v);
+        
+        Assertions.assertEquals(6, res.x, EPS);
+        Assertions.assertEquals(-1, res.y, EPS);
+        Assertions.assertEquals(1, res.z, EPS);
+    }
+    
+    @Test
+    void testScale() {
+        Vector3f v = new Vector3f(1, 1, 1);
+        Matrix4f s = Matrix4f.scale(2, 3, 4);
+        Vector3f res = Matrix4f.multiply(s, v);
+        
+        Assertions.assertEquals(2, res.x, EPS);
+        Assertions.assertEquals(3, res.y, EPS);
+        Assertions.assertEquals(4, res.z, EPS);
+    }
+    
+    @Test
+    void testRotationZ() {
+        Vector3f v = new Vector3f(1, 0, 0);
+        Matrix4f r = Matrix4f.rotateZ((float) (Math.PI / 2));
+        Vector3f res = Matrix4f.multiply(r, v);
+        
+        Assertions.assertEquals(0, res.x, EPS);
+        Assertions.assertEquals(1, res.y, EPS);
+        Assertions.assertEquals(0, res.z, EPS);
+    }
 }
