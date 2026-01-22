@@ -1,7 +1,6 @@
 module com.cgvsu {
     requires javafx.controls;
     requires javafx.fxml;
-    requires vecmath;
     requires java.desktop;
 
 
