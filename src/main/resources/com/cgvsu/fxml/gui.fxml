@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.canvas.Canvas?>
 
+<?import javafx.scene.control.ListView?>
 <AnchorPane fx:id="anchorPane" xmlns:fx="http://javafx.com/fxml" fx:controller="com.cgvsu.GuiController">
     <MenuBar>
         <Menu mnemonicParsing="false" text="File">
@@ -57,6 +58,18 @@
         </Menu>
 
         <Menu mnemonicParsing="false" text="Model Options">
+
+            <MenuItem mnemonicParsing="false" onAction="#onSelectNextModel" text="Next Model">
+                <accelerator>
+                    <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="PAGE_DOWN"/>
+                </accelerator>
+            </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="#onSelectPrevModel" text="Prev Model">
+                <accelerator>
+                    <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="PAGE_UP"/>
+                </accelerator>
+            </MenuItem>
+
             <MenuItem mnemonicParsing="false" onAction="#handleModelScaleUp" text="Scale Up (+10%)">
                 <accelerator>
                     <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="EQUALS"/>
@@ -84,5 +97,17 @@
         </Menu>
     </MenuBar>
 
-    <Canvas fx:id="canvas" width="1600" height="870" AnchorPane.topAnchor="30.0"/>
+    <ListView fx:id="modelsListView"
+              AnchorPane.topAnchor="30.0"
+              AnchorPane.leftAnchor="0.0"
+              AnchorPane.bottomAnchor="0.0"
+              prefWidth="220.0"/>
+
+    <!-- Canvas справа -->
+    <Canvas fx:id="canvas"
+            AnchorPane.topAnchor="30.0"
+            AnchorPane.leftAnchor="220.0"
+            AnchorPane.rightAnchor="0.0"
+            AnchorPane.bottomAnchor="0.0"/>
+
 </AnchorPane>

@@ -69,4 +69,5 @@ public class GraphicConveyor {
             vertex.x * width / 2.0F + width / 2.0F,
             -vertex.y * height / 2.0F + height / 2.0F);
     }
+
 }

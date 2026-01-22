@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import static com.cgvsu.objreader.ObjReader.DeferredFace.faceHasNegativeIndex;
+
 public class ObjReader {
 
     private static final String OBJ_VERTEX_TOKEN = "v";
@@ -18,6 +20,8 @@ public class ObjReader {
 
     public static Model read(String fileContent) {
         Model result = new Model();
+
+        final ArrayList<DeferredFace> deferredFaces = new ArrayList<>();
 
         int lineInd = 0;
         Scanner scanner = new Scanner(fileContent);
@@ -56,16 +60,40 @@ public class ObjReader {
                 case OBJ_VERTEX_TOKEN -> result.vertices.add(parseVertex(wordsInLine, lineInd));
                 case OBJ_TEXTURE_TOKEN -> result.textureVertices.add(parseTextureVertex(wordsInLine, lineInd));
                 case OBJ_NORMAL_TOKEN -> result.normals.add(parseNormal(wordsInLine, lineInd));
-                case OBJ_FACE_TOKEN -> result.polygons.add(parseFace(
-                        wordsInLine,
-                        lineInd,
-                        result.vertices.size(),
-                        result.textureVertices.size(),
-                        result.normals.size()
-                ));
-                default -> {}
+
+                case OBJ_FACE_TOKEN -> {
+                    deferredFaces.add(new DeferredFace(
+                            lineInd,
+                            new ArrayList<>(wordsInLine),
+                            result.vertices.size(),
+                            result.textureVertices.size(),
+                            result.normals.size()
+                    ));
+                }
+                default -> {
+                }
             }
         }
+
+        final int finalV = result.vertices.size();
+        final int finalVT = result.textureVertices.size();
+        final int finalVN = result.normals.size();
+
+        for (DeferredFace df : deferredFaces) {
+            final boolean hasNeg = faceHasNegativeIndex(df.words);
+
+            int vCount = hasNeg ? df.vCountAtTime : finalV;
+            int vtCount = hasNeg ? df.vtCountAtTime : finalVT;
+            int vnCount = hasNeg ? df.vnCountAtTime : finalVN;
+
+            if (vCount == 0) vCount = finalV;
+            if (vtCount == 0) vtCount = finalVT;
+            if (vnCount == 0) vnCount = finalVN;
+
+            result.polygons.add(parseFace(df.words, df.lineInd, vCount, vtCount, vnCount));
+        }
+
+
 
         return result;
     }
@@ -88,10 +116,10 @@ public class ObjReader {
                     Float.parseFloat(wordsInLineWithoutToken.get(1)),
                     Float.parseFloat(wordsInLineWithoutToken.get(2)));
 
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             throw new ObjReaderException("Failed to parse float value.", lineInd);
 
-        } catch(IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             throw new ObjReaderException("Too few vertex arguments.", lineInd);
         }
     }
@@ -109,10 +137,10 @@ public class ObjReader {
                     Float.parseFloat(wordsInLineWithoutToken.get(0)),
                     Float.parseFloat(wordsInLineWithoutToken.get(1)));
 
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             throw new ObjReaderException("Failed to parse float value.", lineInd);
 
-        } catch(IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             throw new ObjReaderException("Too few texture vertex arguments.", lineInd);
         }
     }
@@ -132,10 +160,10 @@ public class ObjReader {
                     Float.parseFloat(wordsInLineWithoutToken.get(1)),
                     Float.parseFloat(wordsInLineWithoutToken.get(2)));
 
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             throw new ObjReaderException("Failed to parse float value.", lineInd);
 
-        } catch(IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             throw new ObjReaderException("Too few normal arguments.", lineInd);
         }
     }
@@ -240,10 +268,10 @@ public class ObjReader {
 
             return new FaceFlags(hasVT, hasVN);
 
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             throw new ObjReaderException("Failed to parse int value.", lineInd);
 
-        } catch(IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException e) {
             throw new ObjReaderException("Too few arguments.", lineInd);
         }
     }
@@ -261,5 +289,33 @@ public class ObjReader {
             throw new ObjReaderException("Face index out of bounds.", lineInd);
         }
         return resolved;
+    }
+
+
+    protected static class DeferredFace {
+        final int lineInd;
+        final ArrayList<String> words; // без токена "f"
+        final int vCountAtTime;
+        final int vtCountAtTime;
+        final int vnCountAtTime;
+
+        public DeferredFace(int lineInd, ArrayList<String> words, int vCountAtTime, int vtCountAtTime, int vnCountAtTime) {
+            this.lineInd = lineInd;
+            this.words = words;
+            this.vCountAtTime = vCountAtTime;
+            this.vtCountAtTime = vtCountAtTime;
+            this.vnCountAtTime = vnCountAtTime;
+        }
+
+        protected static boolean faceHasNegativeIndex(final ArrayList<String> faceWords) {
+            for (String w : faceWords) {
+                String[] parts = w.split("/", -1);
+                for (String p : parts) {
+                    if (p == null || p.isEmpty()) continue;
+                    if (p.charAt(0) == '-') return true;
+                }
+            }
+            return false;
+        }
     }
 }

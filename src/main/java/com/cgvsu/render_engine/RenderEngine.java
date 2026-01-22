@@ -21,7 +21,8 @@ public class RenderEngine {
             final Camera camera,
             final Model mesh,
             final int width,
-            final int height) {
+            final int height,
+            final Matrix4f modelMatrix) {
 
         // [Дима] Инициализация Z-буфера
         final float[] zBuffer = new float[width * height];
@@ -30,7 +31,6 @@ public class RenderEngine {
         final PixelWriter pixelWriter = graphicsContext.getPixelWriter();
 
         // [Артём] Подготовка матриц
-        Matrix4f modelMatrix = rotateScaleTranslate(mesh.getTranslation(), mesh.getRotation(), mesh.getScale());
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
 
@@ -119,7 +119,8 @@ public class RenderEngine {
     }
 
     private static boolean sameSign(float v, float ref) {
-        return (ref > 0) ? (v >= 0) : (v <= 0);
+        if (ref > 0) return v >= 0;
+        return v <= 0;
     }
 
     private static float min3(float a, float b, float c) {
