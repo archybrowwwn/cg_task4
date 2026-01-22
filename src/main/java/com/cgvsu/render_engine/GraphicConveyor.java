@@ -20,7 +20,7 @@ public class GraphicConveyor {
     }
 
     public static Matrix4f lookAt(Vector3f eye, Vector3f target, Vector3f up) {
-        Vector3f resultZ = target.subtract(eye);
+        Vector3f resultZ = eye.subtract(target);
         Vector3f resultX = Vector3f.cross(up, resultZ);
         Vector3f resultY = Vector3f.cross(resultZ, resultX);
         
@@ -29,10 +29,10 @@ public class GraphicConveyor {
         resultY = resultY.normalize();
 
         float[] matrix = new float[]{
-                resultX.x, resultY.x, resultZ.x, 0,
-                resultX.y, resultY.y, resultZ.y, 0,
-                resultX.z, resultY.z, resultZ.z, 0,
-                -resultX.dot(eye), -resultY.dot(eye), -resultZ.dot(eye), 1};
+                resultX.x, resultX.y, resultX.z, -resultX.dot(eye),
+                resultY.x, resultY.y, resultY.z, -resultY.dot(eye),
+                resultZ.x, resultZ.y, resultZ.z, -resultZ.dot(eye),
+                0, 0, 0, 1};
         return new Matrix4f(matrix);
     }
 
@@ -47,10 +47,9 @@ public class GraphicConveyor {
 
         result.set(0, 0, tangentMinusOnDegree / aspectRatio);
         result.set(1, 1, tangentMinusOnDegree);
-        result.set(2, 2, (farPlane + nearPlane) / (farPlane - nearPlane));
-        result.set(2, 3, 1.0F);
-        result.set(3, 2, 2 * (nearPlane * farPlane) / (nearPlane - farPlane));
-
+        result.set(2, 2, (farPlane + nearPlane) / (nearPlane - farPlane));
+        result.set(2, 3, 2 * (nearPlane * farPlane) / (nearPlane - farPlane));
+        result.set(3, 2, -1.0F);
         result.set(3, 3, 0);
         
         return result;
@@ -61,6 +60,8 @@ public class GraphicConveyor {
     }
 
     public static Vector2f vertexToPoint(final Vector3f vertex, final int width, final int height) {
-        return new Vector2f(vertex.x * width + width / 2.0F, -vertex.y * height + height / 2.0F);
+        return new Vector2f(
+            vertex.x * width / 2.0F + width / 2.0F,
+            -vertex.y * height / 2.0F + height / 2.0F);
     }
 }

@@ -4,6 +4,7 @@ import java.util.Arrays;
 public class Matrix4f {
 
     private final float[] m;
+    public static final float EPS = 1e-7f;
 
     public Matrix4f() {
         m = new float[16];
@@ -36,7 +37,7 @@ public class Matrix4f {
         float resZ = matrix.get(2, 0) * x + matrix.get(2, 1) * y + matrix.get(2, 2) * z + matrix.get(2, 3) * w;
         float resW = matrix.get(3, 0) * x + matrix.get(3, 1) * y + matrix.get(3, 2) * z + matrix.get(3, 3) * w;
 
-        if (Math.abs(resW) > 1e-7f) {
+        if (Math.abs(resW) > EPS) {
             resX /= resW;
             resY /= resW;
             resZ /= resW;
