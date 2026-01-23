@@ -39,6 +39,22 @@ public class Camera {
         return target;
     }
 
+    public float getFov() {
+        return fov;
+    }
+
+    public float getAspectRatio() {
+        return aspectRatio;
+    }
+
+    public float getNearPlane() {
+        return nearPlane;
+    }
+
+    public float getFarPlane() {
+        return farPlane;
+    }
+
     public void movePosition(final Vector3f translation) {
         this.position = this.position.add(translation);
     }

@@ -78,11 +78,12 @@ public class ModelPreprocessor {
 
             Vector3f ab = Vector3f.subtract(b, a);
             Vector3f ac = Vector3f.subtract(c, a);
-            Vector3f faceN = Vector3f.cross(ab, ac);
+            Vector3f faceN = Vector3f.cross(ac, ab);
+            faceN = new Vector3f(-faceN.x, -faceN.y, -faceN.z);
 
-            accum.get(ia).add(faceN);
-            accum.get(ib).add(faceN);
-            accum.get(ic).add(faceN);
+            accum.set(ia, accum.get(ia).add(faceN));
+            accum.set(ib, accum.get(ib).add(faceN));
+            accum.set(ic, accum.get(ic).add(faceN));
         }
 
         model.normals.clear();

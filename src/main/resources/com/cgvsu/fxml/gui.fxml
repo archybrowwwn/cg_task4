@@ -6,6 +6,10 @@
 <?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
 
 <AnchorPane fx:id="anchorPane" xmlns:fx="http://javafx.com/fxml" fx:controller="com.cgvsu.GuiController">
     <MenuBar>
@@ -21,9 +25,16 @@
                     <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="S"/>
                 </accelerator>
             </MenuItem>
+
+            <MenuItem mnemonicParsing="false" onAction="#onOpenTextureMenuItemClick" text="Load Texture"/>
         </Menu>
 
         <Menu mnemonicParsing="false" text="Camera Options">
+            <MenuItem mnemonicParsing="false" onAction="#onAddCameraMenuItemClick" text="Add Camera"/>
+            <MenuItem mnemonicParsing="false" onAction="#onRemoveCameraMenuItemClick" text="Remove Camera"/>
+            <MenuItem mnemonicParsing="false" onAction="#onPrevCameraMenuItemClick" text="Prev Camera"/>
+            <MenuItem mnemonicParsing="false" onAction="#onNextCameraMenuItemClick" text="Next Camera"/>
+
             <MenuItem mnemonicParsing="false" onAction="#handleCameraForward" text="Forward">
                 <accelerator>
                     <KeyCodeCombination alt="UP" control="UP" meta="UP" shift="UP" shortcut="UP" code="UP"/>
@@ -85,4 +96,13 @@
     </MenuBar>
 
     <Canvas fx:id="canvas" width="1600" height="870" AnchorPane.topAnchor="30.0"/>
+
+    <VBox spacing="8.0" AnchorPane.topAnchor="40.0" AnchorPane.rightAnchor="10.0">
+        <Label text="Render Modes"/>
+        <CheckBox fx:id="cbWireframe" text="Draw wireframe"/>
+        <CheckBox fx:id="cbTexture" text="Use texture"/>
+        <CheckBox fx:id="cbLighting" text="Use lighting"/>
+        <Label text="Base color"/>
+        <ColorPicker fx:id="fillColorPicker"/>
+    </VBox>
 </AnchorPane>
