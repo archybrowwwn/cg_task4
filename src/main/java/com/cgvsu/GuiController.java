@@ -17,6 +17,8 @@ import com.cgvsu.objwriter.ObjWriterException;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.scene.SceneObject;
+import javafx.scene.input.KeyEvent;
+
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -30,7 +32,9 @@ import javafx.scene.control.ColorPicker;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -43,9 +47,6 @@ public class GuiController {
     private static final float TRANSLATION = 0.5F;
 
     @FXML
-    AnchorPane anchorPane;
-
-    @FXML
     private Canvas canvas;
 
     @FXML
@@ -53,6 +54,44 @@ public class GuiController {
 
     @FXML
     private ListView<String> polygonsListView;
+
+    @FXML
+    private Slider txSlider;
+    @FXML
+    private Slider tySlider;
+    @FXML
+    private Slider tzSlider;
+    @FXML
+    private Slider rxSlider;
+    @FXML
+    private Slider rySlider;
+    @FXML
+    private Slider rzSlider;
+    @FXML
+    private Slider sxSlider;
+    @FXML
+    private Slider sySlider;
+    @FXML
+    private Slider szSlider;
+
+    @FXML
+    private Label txValueLabel;
+    @FXML
+    private Label tyValueLabel;
+    @FXML
+    private Label tzValueLabel;
+    @FXML
+    private Label rxValueLabel;
+    @FXML
+    private Label ryValueLabel;
+    @FXML
+    private Label rzValueLabel;
+    @FXML
+    private Label sxValueLabel;
+    @FXML
+    private Label syValueLabel;
+    @FXML
+    private Label szValueLabel;
 
     private final ArrayList<SceneObject> sceneObjects = new ArrayList<>();
     private int activeIndex = -1;
@@ -68,7 +107,6 @@ public class GuiController {
     @FXML
     private ColorPicker fillColorPicker;
 
-    private Model mesh = null;
     private Image texture = null;
 
     private final ArrayList<Camera> cameras = new ArrayList<>();
@@ -76,9 +114,140 @@ public class GuiController {
 
     private Timeline timeline;
 
+    // [Артём [Task 5]] Переменные для мыши
+    private float lastX;
+    private float lastY;
+    private final float MOUSE_SENSITIVITY = 0.01f;
+
+    private boolean isSyncingSliders = false;
+
     private SceneObject getActiveObject() {
         if (activeIndex < 0 || activeIndex >= sceneObjects.size()) return null;
         return sceneObjects.get(activeIndex);
+    }
+
+    private static String fmt2(final float v) {
+        return String.format("%.2f", v);
+    }
+
+    private static String fmt1(final float v) {
+        return String.format("%.1f", v);
+    }
+
+    private void setupTransformSliders() {
+        if (txSlider == null) return;
+
+        configureSlider(txSlider, -50, 50, 0);
+        configureSlider(tySlider, -50, 50, 0);
+        configureSlider(tzSlider, -50, 50, 0);
+
+        configureSlider(rxSlider, -180, 180, 0);
+        configureSlider(rySlider, -180, 180, 0);
+        configureSlider(rzSlider, -180, 180, 0);
+
+        configureSlider(sxSlider, 0.01, 10, 1);
+        configureSlider(sySlider, 0.01, 10, 1);
+        configureSlider(szSlider, 0.01, 10, 1);
+
+        txSlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+        tySlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+        tzSlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+
+        rxSlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+        rySlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+        rzSlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+
+        sxSlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+        sySlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+        szSlider.valueProperty().addListener((o, ov, nv) -> applyTransformFromSliders());
+
+        syncSlidersWithActiveObject();
+    }
+
+    private void configureSlider(final Slider s, final double min, final double max, final double value) {
+        if (s == null) return;
+        s.setMin(min);
+        s.setMax(max);
+        s.setValue(value);
+        s.setBlockIncrement((max - min) / 200.0);
+        s.setMajorTickUnit((max - min) / 4.0);
+        s.setMinorTickCount(4);
+        s.setSnapToTicks(false);
+    }
+
+    private void syncSlidersWithActiveObject() {
+        if (txSlider == null) return;
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        isSyncingSliders = true;
+        try {
+            txSlider.setValue(active.position.x);
+            tySlider.setValue(active.position.y);
+            tzSlider.setValue(active.position.z);
+
+            rxSlider.setValue(active.rotationDeg.x);
+            rySlider.setValue(active.rotationDeg.y);
+            rzSlider.setValue(active.rotationDeg.z);
+
+            sxSlider.setValue(active.scale.x);
+            sySlider.setValue(active.scale.y);
+            szSlider.setValue(active.scale.z);
+
+            updateTransformValueLabels(active);
+        } finally {
+            isSyncingSliders = false;
+        }
+    }
+
+    private void applyTransformFromSliders() {
+        if (isSyncingSliders || txSlider == null) return;
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        active.position.x = (float) txSlider.getValue();
+        active.position.y = (float) tySlider.getValue();
+        active.position.z = (float) tzSlider.getValue();
+
+        active.rotationDeg.x = (float) rxSlider.getValue();
+        active.rotationDeg.y = (float) rySlider.getValue();
+        active.rotationDeg.z = (float) rzSlider.getValue();
+
+        active.scale.x = (float) sxSlider.getValue();
+        active.scale.y = (float) sySlider.getValue();
+        active.scale.z = (float) szSlider.getValue();
+
+        updateTransformValueLabels(active);
+    }
+
+    private void updateTransformValueLabels(final SceneObject active) {
+        if (txValueLabel != null) txValueLabel.setText(fmt2(active.position.x));
+        if (tyValueLabel != null) tyValueLabel.setText(fmt2(active.position.y));
+        if (tzValueLabel != null) tzValueLabel.setText(fmt2(active.position.z));
+
+        if (rxValueLabel != null) rxValueLabel.setText(fmt1(active.rotationDeg.x));
+        if (ryValueLabel != null) ryValueLabel.setText(fmt1(active.rotationDeg.y));
+        if (rzValueLabel != null) rzValueLabel.setText(fmt1(active.rotationDeg.z));
+
+        if (sxValueLabel != null) sxValueLabel.setText(fmt2(active.scale.x));
+        if (syValueLabel != null) syValueLabel.setText(fmt2(active.scale.y));
+        if (szValueLabel != null) szValueLabel.setText(fmt2(active.scale.z));
+    }
+
+    @FXML
+    private void onResetTransform(final ActionEvent e) {
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+        active.position.x = 0;
+        active.position.y = 0;
+        active.position.z = 0;
+        active.rotationDeg.x = 0;
+        active.rotationDeg.y = 0;
+        active.rotationDeg.z = 0;
+        active.scale.x = 1;
+        active.scale.y = 1;
+        active.scale.z = 1;
+        syncSlidersWithActiveObject();
     }
 
     private void refreshPolygonsList() {
@@ -95,11 +264,28 @@ public class GuiController {
         }
     }
 
-
     @FXML
     private void initialize() {
-        anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
-        anchorPane.prefHeightProperty().addListener((ov, oldValue, newValue) -> canvas.setHeight(newValue.doubleValue()));
+        canvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) return;
+
+            newScene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+                if (!event.isControlDown()) return;
+
+                if (event.getCode() == KeyCode.EQUALS || event.getCode() == KeyCode.PLUS || event.getCode() == KeyCode.ADD) {
+                    handleCameraForward(null);
+                    event.consume(); // важно: глушим, чтобы accelerator не сработал
+                } else if (event.getCode() == KeyCode.MINUS || event.getCode() == KeyCode.SUBTRACT) {
+                    handleCameraBackward(null);
+                    event.consume();
+                }
+            });
+
+            if (canvas.getParent() instanceof StackPane sp) {
+                canvas.widthProperty().bind(sp.widthProperty());
+                canvas.heightProperty().bind(sp.heightProperty());
+            }
+        });
 
         if (fillColorPicker != null) {
             fillColorPicker.setValue(Color.LIGHTGRAY);
@@ -112,6 +298,66 @@ public class GuiController {
                     1.0F, 1, 0.01F, 100));
             activeCameraIndex = 0;
         }
+
+        setupTransformSliders();
+
+        if (modelsListView != null) {
+            modelsListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldVal, newVal) -> {
+                int idx = newVal.intValue();
+                if (idx >= 0 && idx < sceneObjects.size()) {
+                    activeIndex = idx;
+                    refreshPolygonsList();
+                    syncSlidersWithActiveObject();
+                }
+            });
+        }
+
+        // [Артём [Task 5]] Обработка клика мыши
+        canvas.setFocusTraversable(true);
+        canvas.setOnMousePressed(event -> {
+            lastX = (float) event.getX();
+            lastY = (float) event.getY();
+        });
+
+        canvas.setOnMouseDragged(event -> {
+            float x = (float) event.getX();
+            float y = (float) event.getY();
+
+            float dx = (x - lastX) * MOUSE_SENSITIVITY;
+            float dy = (y - lastY) * MOUSE_SENSITIVITY;
+
+            if (event.getButton() == MouseButton.PRIMARY) {
+                SceneObject active = getActiveObject();
+                if (active != null) {
+                    active.rotationDeg.y += (float) Math.toDegrees(dx);
+                    active.rotationDeg.x += (float) Math.toDegrees(dy);
+                    syncSlidersWithActiveObject();
+                }
+            } else if (event.getButton() == MouseButton.SECONDARY) {
+                handleCameraRotation(dx, dy);
+            }
+
+            lastX = x;
+            lastY = y;
+        });
+
+        // [Артём [Task 5]] Вращение камеры мышью
+        canvas.setOnKeyPressed(event -> {
+
+            if (event.getCode() == KeyCode.W) handleCameraForward(null);
+            else if (event.getCode() == KeyCode.S) handleCameraBackward(null);
+
+            else if (event.getCode() == KeyCode.A) {
+                SceneObject active = getActiveObject();
+                if (active != null) active.rotationDeg.y += 5.0f;
+            } else if (event.getCode() == KeyCode.D) {
+                SceneObject active = getActiveObject();
+                if (active != null) active.rotationDeg.y -= 5.0f;
+            } else if (event.getCode() == KeyCode.UP) handleCameraUp(null);
+            else if (event.getCode() == KeyCode.DOWN) handleCameraDown(null);
+            else if (event.getCode() == KeyCode.LEFT) handleCameraLeft(null);
+            else if (event.getCode() == KeyCode.RIGHT) handleCameraRight(null);
+        });
 
         timeline = new Timeline();
         timeline.setCycleCount(Animation.INDEFINITE);
@@ -159,13 +405,6 @@ public class GuiController {
                     (int) height
             );
 
-            modelsListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldVal, newVal) -> {
-                int idx = newVal.intValue();
-                if (idx >= 0 && idx < sceneObjects.size()) {
-                    activeIndex = idx;
-                    refreshPolygonsList();
-                }
-            });
         });
         timeline.getKeyFrames().add(frame);
         timeline.play();
@@ -350,7 +589,6 @@ public class GuiController {
 
             int idx = polygonsListView.getSelectionModel().getSelectedIndex();
 
-            // fallback: парсим из строки "Polygon #123"
             if (idx < 0) {
                 String item = polygonsListView.getSelectionModel().getSelectedItem();
                 if (item != null && item.startsWith("Polygon #")) {
@@ -385,7 +623,6 @@ public class GuiController {
 
             refreshPolygonsList();
 
-            // визуально: выделим следующий элемент, чтобы было понятно что список обновился
             if (after > 0) {
                 int select = idx;
                 if (select >= after) select = after - 1;
@@ -403,6 +640,7 @@ public class GuiController {
             alert.showAndWait();
         }
     }
+
     // Переключение активной модели (для пункта 2)
     @FXML
     private void onSelectNextModel() {
@@ -422,27 +660,28 @@ public class GuiController {
 
     // !!! [Артём] ОБНОВЛЕНИЕ Управление камерой
 
-    @FXML public void handleCameraForward(ActionEvent actionEvent) {
+    @FXML
+    public void handleCameraForward(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, 0, TRANSLATION));
     }
 
-    @FXML private void handleCameraBackward(ActionEvent actionEvent) {
+    @FXML
+    private void handleCameraBackward(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
     }
 
-    @FXML public void handleCameraTurnLeft(ActionEvent actionEvent) {
+    @FXML
+    public void handleCameraTurnLeft(ActionEvent actionEvent) {
         handleCameraRotation(-0.05f, 0);
     }
 
-    @FXML public void handleCameraTurnRight(ActionEvent actionEvent) {
+    @FXML
+    public void handleCameraTurnRight(ActionEvent actionEvent) {
         handleCameraRotation(0.05f, 0);
     }
 
-    @FXML private void handleCameraLeft(ActionEvent actionEvent) {
-        getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
-    }
-
-    @FXML private void handleCameraRight(ActionEvent actionEvent) {
+    @FXML
+    private void handleCameraLeft(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(TRANSLATION, 0, 0));
     }
 
@@ -451,9 +690,16 @@ public class GuiController {
         getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
     }
 
-    @FXML private void handleCameraDown(ActionEvent actionEvent) {
+    @FXML
+    private void handleCameraUp(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, TRANSLATION, 0));
     }
+
+    @FXML
+    private void handleCameraDown(ActionEvent actionEvent) {
+        getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
+    }
+
 
     // !!! [Артём] Новый метод
 
@@ -463,11 +709,13 @@ public class GuiController {
         Vector3f position = camera.getPosition();
         Vector3f view = Vector3f.subtract(target, position);
         Matrix4f rotateY = Matrix4f.rotateY(dYaw);
-        Vector3f newView = Matrix4f.multiply(rotateY, view);
-        camera.setTarget(position.add(newView));
+        Matrix4f rotateX = Matrix4f.rotateX(dPitch);
+
+        Vector3f v = Matrix4f.multiply(rotateY, view);
+        v = Matrix4f.multiply(rotateX, v);
+        camera.setTarget(position.add(v));
     }
 
-    // ===== Трансформации АКТИВНОЙ модели (пункт 2) =====
 
     @FXML
     private void handleModelScaleUp(ActionEvent actionEvent) {
@@ -478,6 +726,10 @@ public class GuiController {
         active.scale.x = s.x * 1.1f;
         active.scale.y = s.y * 1.1f;
         active.scale.z = s.z * 1.1f;
+
+        handleCameraForward(null);
+
+        handleCameraBackward(null);
     }
 
     @FXML
@@ -522,5 +774,4 @@ public class GuiController {
 
         active.position.z += 0.5f;
     }
-
 }

@@ -1,114 +1,185 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.input.KeyCodeCombination?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ColorPicker?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.input.KeyCodeCombination?>
+<?import javafx.scene.layout.*?>
 
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.Button?>
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.cgvsu.GuiController">
 
-<AnchorPane fx:id="anchorPane" xmlns:fx="http://javafx.com/fxml" fx:controller="com.cgvsu.GuiController">
-    <MenuBar>
-        <Menu mnemonicParsing="false" text="File">
-            <MenuItem mnemonicParsing="false"
-                      onAction="#onOpenModelMenuItemClick"
-                      text="Load Model"
-                      accelerator="Ctrl+F"/>
+    <!-- верхнее меню -->
+    <top>
+        <MenuBar>
+            <Menu mnemonicParsing="false" text="File">
+                <MenuItem mnemonicParsing="false"
+                          onAction="#onOpenModelMenuItemClick"
+                          text="Load Model"
+                          accelerator="Ctrl+F"/>
 
-            <MenuItem mnemonicParsing="false" onAction="#onSaveModelMenuItemClick" text="Save Model">
-                <accelerator>
-                    <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="S"/>
-                </accelerator>
-            </MenuItem>
+                <MenuItem mnemonicParsing="false" onAction="#onSaveModelMenuItemClick" text="Save Model">
+                    <accelerator>
+                        <KeyCodeCombination alt="UP" control="DOWN" meta="UP" shift="UP" shortcut="UP" code="S"/>
+                    </accelerator>
+                </MenuItem>
 
-            <MenuItem mnemonicParsing="false" onAction="#onOpenTextureMenuItemClick" text="Load Texture"/>
-        </Menu>
+                <MenuItem mnemonicParsing="false" onAction="#onOpenTextureMenuItemClick" text="Load Texture"/>
+            </Menu>
 
-        <Menu mnemonicParsing="false" text="Camera Options">
-            <MenuItem mnemonicParsing="false" onAction="#onAddCameraMenuItemClick" text="Add Camera"/>
-            <MenuItem mnemonicParsing="false" onAction="#onRemoveCameraMenuItemClick" text="Remove Camera"/>
-            <MenuItem mnemonicParsing="false" onAction="#onPrevCameraMenuItemClick" text="Prev Camera"/>
-            <MenuItem mnemonicParsing="false" onAction="#onNextCameraMenuItemClick" text="Next Camera"/>
+            <Menu mnemonicParsing="false" text="Camera Options">
+                <MenuItem mnemonicParsing="false" onAction="#onAddCameraMenuItemClick" text="Add Camera"/>
+                <MenuItem mnemonicParsing="false" onAction="#onRemoveCameraMenuItemClick" text="Remove Camera"/>
+                <MenuItem mnemonicParsing="false" onAction="#onPrevCameraMenuItemClick" text="Prev Camera"/>
+                <MenuItem mnemonicParsing="false" onAction="#onNextCameraMenuItemClick" text="Next Camera"/>
 
-            <SeparatorMenuItem />
+                <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraForward" text="Zoom In (W)" accelerator="W"/>
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraBackward" text="Zoom Out (S)" accelerator="S"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraForward" text="Zoom In (W)" accelerator="W"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraBackward" text="Zoom Out (S)" accelerator="S"/>
 
-            <SeparatorMenuItem />
+                <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraTurnLeft" text="Turn Left (A)" accelerator="A"/>
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraTurnRight" text="Turn Right (D)" accelerator="D"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraTurnLeft" text="Turn Left (A)" accelerator="A"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraTurnRight" text="Turn Right (D)" accelerator="D"/>
 
-            <SeparatorMenuItem />
+                <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraUp" text="Pan Up" accelerator="UP"/>
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraDown" text="Pan Down" accelerator="DOWN"/>
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraLeft" text="Pan Left" accelerator="LEFT"/>
-            <MenuItem mnemonicParsing="false" onAction="#handleCameraRight" text="Pan Right" accelerator="RIGHT"/>
-        </Menu>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraUp" text="Pan Up" accelerator="UP"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraDown" text="Pan Down" accelerator="DOWN"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraLeft" text="Pan Left" accelerator="LEFT"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleCameraRight" text="Pan Right" accelerator="RIGHT"/>
+            </Menu>
 
-        <Menu mnemonicParsing="false" text="Model Options">
-            <MenuItem mnemonicParsing="false" onAction="#onSelectNextModel" text="Next Model" accelerator="Ctrl+PAGE_DOWN"/>
-            <MenuItem mnemonicParsing="false" onAction="#onSelectPrevModel" text="Prev Model" accelerator="Ctrl+PAGE_UP"/>
+            <Menu mnemonicParsing="false" text="Model Options">
+                <MenuItem mnemonicParsing="false" onAction="#onSelectNextModel" text="Next Model" accelerator="Ctrl+PAGE_DOWN"/>
+                <MenuItem mnemonicParsing="false" onAction="#onSelectPrevModel" text="Prev Model" accelerator="Ctrl+PAGE_UP"/>
 
-            <SeparatorMenuItem />
+                <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false" onAction="#handleModelScaleUp" text="Scale Up (+10%)" accelerator="Ctrl+="/>
-            <MenuItem mnemonicParsing="false" onAction="#handleModelScaleDown" text="Scale Down (-10%)" accelerator="Ctrl+-"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleModelScaleUp" text="Scale Up (+10%)" accelerator="Ctrl+="/>
+                <MenuItem mnemonicParsing="false" onAction="#handleModelScaleDown" text="Scale Down (-10%)" accelerator="Ctrl+-"/>
 
-            <MenuItem mnemonicParsing="false" onAction="#handleModelRotateLeft" text="Rotate Left" accelerator="Ctrl+LEFT"/>
-            <MenuItem mnemonicParsing="false" onAction="#handleModelRotateRight" text="Rotate Right" accelerator="Ctrl+RIGHT"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleModelRotateLeft" text="Rotate Left" accelerator="Ctrl+LEFT"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleModelRotateRight" text="Rotate Right" accelerator="Ctrl+RIGHT"/>
 
-            <MenuItem mnemonicParsing="false" onAction="#handleModelTranslateForward" text="Translate Forward Z"/>
-            <MenuItem mnemonicParsing="false" onAction="#handleModelTranslateBackward" text="Translate Backward Z"/>
-        </Menu>
+                <MenuItem mnemonicParsing="false" onAction="#handleModelTranslateForward" text="Translate Forward Z"/>
+                <MenuItem mnemonicParsing="false" onAction="#handleModelTranslateBackward" text="Translate Backward Z"/>
+            </Menu>
 
-        <Menu mnemonicParsing="false" text="Edit">
-            <MenuItem mnemonicParsing="false"
-                      onAction="#onDeleteSelectedPolygon"
-                      text="Delete Polygon"
-                      accelerator="DELETE"/>
-        </Menu>
-    </MenuBar>
+            <Menu mnemonicParsing="false" text="Edit">
+                <MenuItem mnemonicParsing="false"
+                          onAction="#onDeleteSelectedPolygon"
+                          text="Delete Polygon"
+                          accelerator="DELETE"/>
+            </Menu>
+        </MenuBar>
+    </top>
 
-    <ListView fx:id="modelsListView"
-              AnchorPane.topAnchor="30.0"
-              AnchorPane.leftAnchor="0.0"
-              prefWidth="220.0"
-              prefHeight="200.0"/>
+    <!-- левая часть: модели + удаление полигонов -->
+    <left>
+        <VBox spacing="8" prefWidth="240" BorderPane.alignment="CENTER">
+            <Label text="Models" style="-fx-font-weight: bold; -fx-padding: 6 8 0 8;"/>
+            <ListView fx:id="modelsListView" VBox.vgrow="ALWAYS" />
 
-    <ListView fx:id="polygonsListView"
-              AnchorPane.topAnchor="230.0"
-              AnchorPane.leftAnchor="0.0"
-              AnchorPane.bottomAnchor="40.0"
-              prefWidth="220.0"/>
+            <Separator />
 
-    <Button text="Delete Polygon"
-            onAction="#onDeleteSelectedPolygon"
-            AnchorPane.leftAnchor="10.0"
-            AnchorPane.bottomAnchor="5.0"
-            prefWidth="200.0"/>
+            <Label text="Polygons" style="-fx-font-weight: bold; -fx-padding: 0 8 0 8;"/>
+            <ListView fx:id="polygonsListView" VBox.vgrow="ALWAYS" />
 
-    <Canvas fx:id="canvas"
-            AnchorPane.topAnchor="30.0"
-            AnchorPane.leftAnchor="220.0"
-            AnchorPane.rightAnchor="0.0"
-            AnchorPane.bottomAnchor="0.0"/>
+            <Button text="Delete Polygon" onAction="#onDeleteSelectedPolygon" maxWidth="Infinity" />
+        </VBox>
+    </left>
 
-    <VBox spacing="8.0" AnchorPane.topAnchor="40.0" AnchorPane.rightAnchor="10.0">
-        <Label text="Render Modes"/>
-        <CheckBox fx:id="cbWireframe" text="Draw wireframe"/>
-        <CheckBox fx:id="cbTexture" text="Use texture"/>
-        <CheckBox fx:id="cbLighting" text="Use lighting"/>
-        <Label text="Base color"/>
-        <ColorPicker fx:id="fillColorPicker"/>
-    </VBox>
-</AnchorPane>
+    <!-- центр-->
+    <center>
+        <StackPane>
+            <Canvas fx:id="canvas" />
+        </StackPane>
+    </center>
+
+    <!-- правая часть: рендер модели + ползунки -->
+    <right>
+        <ScrollPane fitToWidth="true" prefWidth="380">
+            <VBox spacing="12" style="-fx-padding: 10;">
+
+                <TitledPane text="Render" expanded="true">
+                    <VBox spacing="8" style="-fx-padding: 8;">
+                        <CheckBox fx:id="cbWireframe" text="Draw wireframe"/>
+                        <CheckBox fx:id="cbTexture" text="Use texture"/>
+                        <CheckBox fx:id="cbLighting" text="Use lighting"/>
+                        <Separator />
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Base color" minWidth="80"/>
+                            <ColorPicker fx:id="fillColorPicker" />
+                        </HBox>
+                    </VBox>
+                </TitledPane>
+
+                <TitledPane text="Model transform (Position / Rotation / Scale)" expanded="true">
+                    <VBox spacing="10" style="-fx-padding: 8;">
+
+                        <Label text="Position" style="-fx-font-weight: bold;"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Tx" minWidth="28"/>
+                            <Slider fx:id="txSlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="txValueLabel" text="0.00" minWidth="60"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Ty" minWidth="28"/>
+                            <Slider fx:id="tySlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="tyValueLabel" text="0.00" minWidth="60"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Tz" minWidth="28"/>
+                            <Slider fx:id="tzSlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="tzValueLabel" text="0.00" minWidth="60"/>
+                        </HBox>
+
+                        <Separator />
+
+                        <Label text="Rotation (deg)" style="-fx-font-weight: bold;"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Rx" minWidth="28"/>
+                            <Slider fx:id="rxSlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="rxValueLabel" text="0.0" minWidth="60"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Ry" minWidth="28"/>
+                            <Slider fx:id="rySlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="ryValueLabel" text="0.0" minWidth="60"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Rz" minWidth="28"/>
+                            <Slider fx:id="rzSlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="rzValueLabel" text="0.0" minWidth="60"/>
+                        </HBox>
+
+                        <Separator />
+
+                        <Label text="Scale" style="-fx-font-weight: bold;"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Sx" minWidth="28"/>
+                            <Slider fx:id="sxSlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="sxValueLabel" text="1.00" minWidth="60"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Sy" minWidth="28"/>
+                            <Slider fx:id="sySlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="syValueLabel" text="1.00" minWidth="60"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Sz" minWidth="28"/>
+                            <Slider fx:id="szSlider" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                            <Label fx:id="szValueLabel" text="1.00" minWidth="60"/>
+                        </HBox>
+
+                        <Separator />
+                        <Button text="Reset transform" onAction="#onResetTransform" maxWidth="Infinity" />
+                        <Label text="Camera: LMB drag = rotate model; RMB drag = rotate camera; WASD / arrows = move." wrapText="true" style="-fx-opacity: 0.85;"/>
+                    </VBox>
+                </TitledPane>
+
+            </VBox>
+        </ScrollPane>
+    </right>
+
+</BorderPane>
