@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
+import javafx.scene.control.ListView;
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
@@ -16,6 +17,7 @@ import com.cgvsu.objwriter.ObjWriterException;
 import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
 import com.cgvsu.scene.SceneObject;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -25,11 +27,10 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ColorPicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
-import javafx.scene.layout.StackPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -42,7 +43,7 @@ public class GuiController {
     private static final float TRANSLATION = 0.5F;
 
     @FXML
-    private StackPane viewportPane;
+    AnchorPane anchorPane;
 
     @FXML
     private Canvas canvas;
@@ -55,7 +56,6 @@ public class GuiController {
 
     private final ArrayList<SceneObject> sceneObjects = new ArrayList<>();
     private int activeIndex = -1;
-
     @FXML
     private CheckBox cbWireframe;
 
@@ -67,26 +67,6 @@ public class GuiController {
 
     @FXML
     private ColorPicker fillColorPicker;
-
-    @FXML
-    private Slider camPosX;
-
-    @FXML
-    private Slider camPosY;
-
-    @FXML
-    private Slider camPosZ;
-
-    @FXML
-    private Label camPosXVal;
-
-    @FXML
-    private Label camPosYVal;
-
-    @FXML
-    private Label camPosZVal;
-
-    private boolean cameraUiUpdating = false;
 
     private Model mesh = null;
     private Image texture = null;
@@ -115,10 +95,11 @@ public class GuiController {
         }
     }
 
+
     @FXML
     private void initialize() {
-        canvas.widthProperty().bind(viewportPane.widthProperty());
-        canvas.heightProperty().bind(viewportPane.heightProperty());
+        anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
+        anchorPane.prefHeightProperty().addListener((ov, oldValue, newValue) -> canvas.setHeight(newValue.doubleValue()));
 
         if (fillColorPicker != null) {
             fillColorPicker.setValue(Color.LIGHTGRAY);
@@ -131,17 +112,6 @@ public class GuiController {
                     1.0F, 1, 0.01F, 100));
             activeCameraIndex = 0;
         }
-
-        modelsListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldVal, newVal) -> {
-            int idx = newVal.intValue();
-            if (idx >= 0 && idx < sceneObjects.size()) {
-                activeIndex = idx;
-                refreshPolygonsList();
-            }
-        });
-
-        syncCameraPosSlidersFromCamera();
-        installCameraPosSliderHandlers();
 
         timeline = new Timeline();
         timeline.setCycleCount(Animation.INDEFINITE);
@@ -188,9 +158,18 @@ public class GuiController {
                     (int) width,
                     (int) height
             );
+
+            modelsListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldVal, newVal) -> {
+                int idx = newVal.intValue();
+                if (idx >= 0 && idx < sceneObjects.size()) {
+                    activeIndex = idx;
+                    refreshPolygonsList();
+                }
+            });
         });
         timeline.getKeyFrames().add(frame);
         timeline.play();
+
     }
 
     private Camera getActiveCamera() {
@@ -221,7 +200,6 @@ public class GuiController {
                 c.getFarPlane()
         ));
         activeCameraIndex = cameras.size() - 1;
-        syncCameraPosSlidersFromCamera();
     }
 
     @FXML
@@ -229,21 +207,18 @@ public class GuiController {
         if (cameras.size() <= 1) return;
         cameras.remove(activeCameraIndex);
         if (activeCameraIndex >= cameras.size()) activeCameraIndex = cameras.size() - 1;
-        syncCameraPosSlidersFromCamera();
     }
 
     @FXML
     private void onNextCameraMenuItemClick() {
         if (cameras.isEmpty()) return;
         activeCameraIndex = (activeCameraIndex + 1) % cameras.size();
-        syncCameraPosSlidersFromCamera();
     }
 
     @FXML
     private void onPrevCameraMenuItemClick() {
         if (cameras.isEmpty()) return;
         activeCameraIndex = (activeCameraIndex - 1 + cameras.size()) % cameras.size();
-        syncCameraPosSlidersFromCamera();
     }
 
     @FXML
@@ -428,7 +403,6 @@ public class GuiController {
             alert.showAndWait();
         }
     }
-
     // Переключение активной модели (для пункта 2)
     @FXML
     private void onSelectNextModel() {
@@ -446,41 +420,51 @@ public class GuiController {
         refreshPolygonsList();
     }
 
-    // [Артём] Управление камерой
-    @FXML
-    public void handleCameraForward(ActionEvent actionEvent) {
-        getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
-        syncCameraPosSlidersFromCamera();
-    }
+    // !!! [Артём] ОБНОВЛЕНИЕ Управление камерой
 
-    @FXML
-    private void handleCameraBackward(ActionEvent actionEvent) {
+    @FXML public void handleCameraForward(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, 0, TRANSLATION));
-        syncCameraPosSlidersFromCamera();
     }
 
-    @FXML
-    private void handleCameraLeft(ActionEvent actionEvent) {
+    @FXML private void handleCameraBackward(ActionEvent actionEvent) {
+        getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
+    }
+
+    @FXML public void handleCameraTurnLeft(ActionEvent actionEvent) {
+        handleCameraRotation(-0.05f, 0);
+    }
+
+    @FXML public void handleCameraTurnRight(ActionEvent actionEvent) {
+        handleCameraRotation(0.05f, 0);
+    }
+
+    @FXML private void handleCameraLeft(ActionEvent actionEvent) {
+        getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
+    }
+
+    @FXML private void handleCameraRight(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(TRANSLATION, 0, 0));
-        syncCameraPosSlidersFromCamera();
     }
 
     @FXML
     private void handleCameraRight(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
-        syncCameraPosSlidersFromCamera();
     }
 
-    @FXML
-    private void handleCameraUp(ActionEvent actionEvent) {
+    @FXML private void handleCameraDown(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, TRANSLATION, 0));
-        syncCameraPosSlidersFromCamera();
     }
 
-    @FXML
-    private void handleCameraDown(ActionEvent actionEvent) {
-        getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
-        syncCameraPosSlidersFromCamera();
+    // !!! [Артём] Новый метод
+
+    private void handleCameraRotation(float dYaw, float dPitch) {
+        Camera camera = getActiveCamera();
+        Vector3f target = camera.getTarget();
+        Vector3f position = camera.getPosition();
+        Vector3f view = Vector3f.subtract(target, position);
+        Matrix4f rotateY = Matrix4f.rotateY(dYaw);
+        Vector3f newView = Matrix4f.multiply(rotateY, view);
+        camera.setTarget(position.add(newView));
     }
 
     // ===== Трансформации АКТИВНОЙ модели (пункт 2) =====
@@ -539,57 +523,4 @@ public class GuiController {
         active.position.z += 0.5f;
     }
 
-    private void installCameraPosSliderHandlers() {
-        if (camPosX == null) return;
-
-        camPosX.valueProperty().addListener((o, a, b) -> applyCameraPositionFromSliders());
-        camPosY.valueProperty().addListener((o, a, b) -> applyCameraPositionFromSliders());
-        camPosZ.valueProperty().addListener((o, a, b) -> applyCameraPositionFromSliders());
-    }
-
-    private void syncCameraPosSlidersFromCamera() {
-        if (camPosX == null) return;
-
-        cameraUiUpdating = true;
-        Vector3f p = getActiveCamera().getPosition();
-
-        camPosX.setValue(p.x);
-        camPosY.setValue(p.y);
-        camPosZ.setValue(p.z);
-
-        updateCameraPosValueLabels();
-        cameraUiUpdating = false;
-    }
-
-    private void applyCameraPositionFromSliders() {
-        if (cameraUiUpdating) return;
-
-        Camera c = getActiveCamera();
-        c.setPosition(new Vector3f(
-                (float) camPosX.getValue(),
-                (float) camPosY.getValue(),
-                (float) camPosZ.getValue()
-        ));
-
-        updateCameraPosValueLabels();
-    }
-
-    private void updateCameraPosValueLabels() {
-        if (camPosXVal == null) return;
-
-        camPosXVal.setText(String.format("%.1f", camPosX.getValue()));
-        camPosYVal.setText(String.format("%.1f", camPosY.getValue()));
-        camPosZVal.setText(String.format("%.1f", camPosZ.getValue()));
-    }
-
-    @FXML
-    private void onResetCameraPosition() {
-        cameraUiUpdating = true;
-        camPosX.setValue(0);
-        camPosY.setValue(0);
-        camPosZ.setValue(100);
-        cameraUiUpdating = false;
-
-        applyCameraPositionFromSliders();
-    }
 }

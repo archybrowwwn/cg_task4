@@ -55,8 +55,25 @@ public class Camera {
         return farPlane;
     }
 
+    // [Артём] Умное перемещение
     public void movePosition(final Vector3f translation) {
-        this.position = this.position.add(translation);
+        Vector3f forward = Vector3f.subtract(target, position);
+
+        if (forward.length() < 1e-5) return;
+        forward = forward.normalize();
+
+        Vector3f up = new Vector3f(0, 1, 0);
+
+        Vector3f right = Vector3f.cross(up, forward).normalize();
+
+        Vector3f moveX = right.multiply(translation.x);
+        Vector3f moveY = new Vector3f(0, translation.y, 0);
+        Vector3f moveZ = forward.multiply(translation.z);
+
+        Vector3f move = moveX.add(moveY).add(moveZ);
+
+        this.position = this.position.add(move);
+        this.target = this.target.add(move);
     }
 
     public void moveTarget(final Vector3f translation) {
