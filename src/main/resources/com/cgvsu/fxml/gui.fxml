@@ -10,6 +10,7 @@
 <?import javafx.scene.control.ColorPicker?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Button?>
@@ -37,68 +38,35 @@
             <MenuItem mnemonicParsing="false" onAction="#onPrevCameraMenuItemClick" text="Prev Camera"/>
             <MenuItem mnemonicParsing="false" onAction="#onNextCameraMenuItemClick" text="Next Camera"/>
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleCameraForward"
-                      text="Forward"
-                      accelerator="UP"/>
+            <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleCameraBackward"
-                      text="Backward"
-                      accelerator="DOWN"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraForward" text="Zoom In (W)" accelerator="W"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraBackward" text="Zoom Out (S)" accelerator="S"/>
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleCameraLeft"
-                      text="Left"
-                      accelerator="LEFT"/>
+            <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleCameraRight"
-                      text="Right"
-                      accelerator="RIGHT"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraTurnLeft" text="Turn Left (A)" accelerator="A"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraTurnRight" text="Turn Right (D)" accelerator="D"/>
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleCameraUp"
-                      text="Up"
-                      accelerator="W"/>
+            <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleCameraDown"
-                      text="Down"
-                      accelerator="S"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraUp" text="Pan Up" accelerator="UP"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraDown" text="Pan Down" accelerator="DOWN"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraLeft" text="Pan Left" accelerator="LEFT"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleCameraRight" text="Pan Right" accelerator="RIGHT"/>
         </Menu>
 
         <Menu mnemonicParsing="false" text="Model Options">
+            <MenuItem mnemonicParsing="false" onAction="#onSelectNextModel" text="Next Model" accelerator="Ctrl+PAGE_DOWN"/>
+            <MenuItem mnemonicParsing="false" onAction="#onSelectPrevModel" text="Prev Model" accelerator="Ctrl+PAGE_UP"/>
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#onSelectNextModel"
-                      text="Next Model"
-                      accelerator="Ctrl+PAGE_DOWN"/>
+            <SeparatorMenuItem />
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#onSelectPrevModel"
-                      text="Prev Model"
-                      accelerator="Ctrl+PAGE_UP"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleModelScaleUp" text="Scale Up (+10%)" accelerator="Ctrl+="/>
+            <MenuItem mnemonicParsing="false" onAction="#handleModelScaleDown" text="Scale Down (-10%)" accelerator="Ctrl+-"/>
 
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleModelScaleUp"
-                      text="Scale Up (+10%)"
-                      accelerator="Ctrl+="/>
-
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleModelScaleDown"
-                      text="Scale Down (-10%)"
-                      accelerator="Ctrl+-"/>
-
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleModelRotateLeft"
-                      text="Rotate Left"
-                      accelerator="Ctrl+LEFT"/>
-
-            <MenuItem mnemonicParsing="false"
-                      onAction="#handleModelRotateRight"
-                      text="Rotate Right"
-                      accelerator="Ctrl+RIGHT"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleModelRotateLeft" text="Rotate Left" accelerator="Ctrl+LEFT"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleModelRotateRight" text="Rotate Right" accelerator="Ctrl+RIGHT"/>
 
             <MenuItem mnemonicParsing="false" onAction="#handleModelTranslateForward" text="Translate Forward Z"/>
             <MenuItem mnemonicParsing="false" onAction="#handleModelTranslateBackward" text="Translate Backward Z"/>

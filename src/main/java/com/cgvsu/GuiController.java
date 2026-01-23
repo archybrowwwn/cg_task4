@@ -28,6 +28,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -74,6 +76,11 @@ public class GuiController {
 
     private Timeline timeline;
 
+    // [Артём [Task 5]] Переменные для мыши
+    private float lastX;
+    private float lastY;
+    private final float MOUSE_SENSITIVITY = 0.01f;
+
     private SceneObject getActiveObject() {
         if (activeIndex < 0 || activeIndex >= sceneObjects.size()) return null;
         return sceneObjects.get(activeIndex);
@@ -93,7 +100,6 @@ public class GuiController {
         }
     }
 
-
     @FXML
     private void initialize() {
         anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
@@ -110,6 +116,52 @@ public class GuiController {
                     1.0F, 1, 0.01F, 100));
             activeCameraIndex = 0;
         }
+
+        // [Артём [Task 5]] Обработка клика мыши
+        canvas.setFocusTraversable(true);
+        canvas.setOnMousePressed(event -> {
+            lastX = (float) event.getX();
+            lastY = (float) event.getY();
+        });
+
+        canvas.setOnMouseDragged(event -> {
+            float x = (float) event.getX();
+            float y = (float) event.getY();
+
+            float dx = (x - lastX) * 0.05f;
+            float dy = (y - lastY) * 0.05f;
+
+            if (event.getButton() == MouseButton.PRIMARY) {
+                SceneObject active = getActiveObject();
+                if (active != null) {
+                    active.rotationDeg.y += dx * 0.05f;
+                    active.rotationDeg.x += dy * 0.05f;
+                }
+            }
+
+            lastX = x;
+            lastY = y;
+        });
+
+        // [Артём [Task 5]] Вращение камеры мышью
+        canvas.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.W) handleCameraForward(null);
+            else if (event.getCode() == KeyCode.S) handleCameraBackward(null);
+
+            else if (event.getCode() == KeyCode.A) {
+                SceneObject active = getActiveObject();
+                if (active != null) active.rotationDeg.y += 5.0f;
+            }
+            else if (event.getCode() == KeyCode.D) {
+                SceneObject active = getActiveObject();
+                if (active != null) active.rotationDeg.y -= 5.0f;
+            }
+
+            else if (event.getCode() == KeyCode.UP) handleCameraUp(null);
+            else if (event.getCode() == KeyCode.DOWN) handleCameraDown(null);
+            else if (event.getCode() == KeyCode.LEFT) handleCameraLeft(null);
+            else if (event.getCode() == KeyCode.RIGHT) handleCameraRight(null);
+        });
 
         timeline = new Timeline();
         timeline.setCycleCount(Animation.INDEFINITE);
@@ -418,38 +470,53 @@ public class GuiController {
         refreshPolygonsList();
     }
 
-    // [Артём] Управление камерой
-    @FXML
-    public void handleCameraForward(ActionEvent actionEvent) {
-        getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
-    }
+    // !!! [Артём] ОБНОВЛЕНИЕ Управление камерой
 
-    @FXML
-    private void handleCameraBackward(ActionEvent actionEvent) {
+    @FXML public void handleCameraForward(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, 0, TRANSLATION));
     }
 
-    @FXML
-    private void handleCameraLeft(ActionEvent actionEvent) {
-        getActiveCamera().movePosition(new Vector3f(TRANSLATION, 0, 0));
+    @FXML private void handleCameraBackward(ActionEvent actionEvent) {
+        getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
     }
 
-    @FXML
-    private void handleCameraRight(ActionEvent actionEvent) {
+    @FXML public void handleCameraTurnLeft(ActionEvent actionEvent) {
+        handleCameraRotation(-0.05f, 0);
+    }
+
+    @FXML public void handleCameraTurnRight(ActionEvent actionEvent) {
+        handleCameraRotation(0.05f, 0);
+    }
+
+    @FXML private void handleCameraLeft(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
     }
 
-    @FXML
-    private void handleCameraUp(ActionEvent actionEvent) {
-        getActiveCamera().movePosition(new Vector3f(0, TRANSLATION, 0));
+    @FXML private void handleCameraRight(ActionEvent actionEvent) {
+        getActiveCamera().movePosition(new Vector3f(TRANSLATION, 0, 0));
     }
 
-    @FXML
-    private void handleCameraDown(ActionEvent actionEvent) {
+    @FXML private void handleCameraUp(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
 
-// ===== Трансформации АКТИВНОЙ модели (пункт 2) =====
+    @FXML private void handleCameraDown(ActionEvent actionEvent) {
+        getActiveCamera().movePosition(new Vector3f(0, TRANSLATION, 0));
+    }
+
+    // !!! [Артём] Новый метод
+
+    private void handleCameraRotation(float dYaw, float dPitch) {
+        Camera camera = getActiveCamera();
+        Vector3f target = camera.getTarget();
+        Vector3f position = camera.getPosition();
+        Vector3f view = Vector3f.subtract(target, position);
+        Matrix4f rotateY = Matrix4f.rotateY(dYaw);
+        Vector3f newView = Matrix4f.multiply(rotateY, view);
+        camera.setTarget(position.add(newView));
+    }
+
+    // ===== Трансформации АКТИВНОЙ модели (пункт 2) =====
 
     @FXML
     private void handleModelScaleUp(ActionEvent actionEvent) {
@@ -504,5 +571,4 @@ public class GuiController {
 
         active.position.z += 0.5f;
     }
-
 }
