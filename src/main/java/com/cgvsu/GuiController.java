@@ -6,13 +6,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
+import javafx.scene.control.ListView;
+import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector3f;
+import com.cgvsu.model.Model;
+import com.cgvsu.model.ModelPreprocessor;
+import com.cgvsu.objreader.ObjReader;
 import com.cgvsu.objwriter.ObjWriter;
 import com.cgvsu.objwriter.ObjWriterException;
+import com.cgvsu.render_engine.Camera;
 import com.cgvsu.render_engine.RenderEngine;
 import javafx.fxml.FXML;
 
-import com.cgvsu.model.ModelPreprocessor;
+import com.cgvsu.scene.SceneObject;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -29,13 +35,11 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import com.cgvsu.model.Model;
-import com.cgvsu.objreader.ObjReader;
-import com.cgvsu.render_engine.Camera;
+import static com.cgvsu.render_engine.GraphicConveyor.rotateScaleTranslate;
 
 public class GuiController {
 
-    final private float TRANSLATION = 0.5F;
+    private static final float TRANSLATION = 0.5F;
 
     @FXML
     AnchorPane anchorPane;
@@ -43,6 +47,11 @@ public class GuiController {
     @FXML
     private Canvas canvas;
 
+    @FXML
+    private ListView<String> modelsListView;
+
+    private final ArrayList<SceneObject> sceneObjects = new ArrayList<>();
+    private int activeIndex = -1;
     @FXML
     private CheckBox cbWireframe;
 
@@ -62,6 +71,11 @@ public class GuiController {
     private int activeCameraIndex = 0;
 
     private Timeline timeline;
+
+    private SceneObject getActiveObject() {
+        if (activeIndex < 0 || activeIndex >= sceneObjects.size()) return null;
+        return sceneObjects.get(activeIndex);
+    }
 
     @FXML
     private void initialize() {
@@ -90,32 +104,47 @@ public class GuiController {
             canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
             getActiveCamera().setAspectRatio((float) (width / height));
 
-            if (mesh != null) {
+            for (SceneObject obj : sceneObjects) {
+                Matrix4f modelMatrix = rotateScaleTranslate(obj.position, obj.rotationDeg, obj.scale);
+
                 boolean drawWireframe = cbWireframe != null && cbWireframe.isSelected();
-                boolean useTexture = cbTexture != null && cbTexture.isSelected();
-                boolean useLighting = cbLighting != null && cbLighting.isSelected();
+                boolean useTexture   = cbTexture != null && cbTexture.isSelected();
+                boolean useLighting  = cbLighting != null && cbLighting.isSelected();
 
                 Color baseColor = (fillColorPicker != null && fillColorPicker.getValue() != null)
-                        ? fillColorPicker.getValue()
-                        : Color.LIGHTGRAY;
+                            ? fillColorPicker.getValue()
+                            : Color.LIGHTGRAY;
 
                 RenderEngine.render(
-                        canvas.getGraphicsContext2D(),
-                        getActiveCamera(),
-                        cameras,
-                        activeCameraIndex,
-                        mesh,
-                        texture,
-                        useTexture,
-                        useLighting,
-                        drawWireframe,
-                        baseColor,
-                        (int) width,
-                        (int) height
-                );
+                            canvas.getGraphicsContext2D(),
+                            getActiveCamera(),
+                            obj.getModel(),
+                            texture,
+                            useTexture,
+                            useLighting,
+                            drawWireframe,
+                            baseColor,
+                            (int) width,
+                            (int) height,
+                            modelMatrix
+                    );
             }
-        });
+            RenderEngine.renderCameraIcons(
+                    canvas.getGraphicsContext2D(),
+                    getActiveCamera(),
+                    cameras,
+                    activeCameraIndex,
+                    (int) width,
+                    (int) height
+            );
 
+            modelsListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldVal, newVal) -> {
+                int idx = newVal.intValue();
+                if (idx >= 0 && idx < sceneObjects.size()) {
+                    activeIndex = idx;
+                }
+            });
+        });
         timeline.getKeyFrames().add(frame);
         timeline.play();
     }
@@ -184,10 +213,23 @@ public class GuiController {
 
         try {
             String fileContent = Files.readString(fileName);
-            mesh = ObjReader.read(fileContent);
+            Model loaded = ObjReader.read(fileContent);
 
-            ModelPreprocessor.triangulate(mesh);
-            ModelPreprocessor.recalculateNormals(mesh);
+            // [Дима] Триангуляция и пересчет нормалей
+            // Это критически важно для работы Z-буфера
+            try {
+                ModelPreprocessor.triangulate(loaded);
+                ModelPreprocessor.recalculateNormals(loaded);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            SceneObject obj = new SceneObject(loaded, file.getName());
+            sceneObjects.add(obj);
+            activeIndex = sceneObjects.size() - 1;
+
+            modelsListView.getItems().add(obj.getName());
+            modelsListView.getSelectionModel().select(activeIndex);
 
         } catch (IOException exception) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -220,9 +262,11 @@ public class GuiController {
         }
     }
 
+    // [Илья] Метод сохранения активной модели
     @FXML
     private void onSaveModelMenuItemClick() {
-        if (mesh == null) {
+        SceneObject active = getActiveObject();
+        if (active == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Save");
             alert.setHeaderText("No model loaded");
@@ -239,7 +283,7 @@ public class GuiController {
         if (file == null) return;
 
         try {
-            String objText = ObjWriter.write(mesh);
+            String objText = ObjWriter.write(active.getModel());
             Files.writeString(file.toPath(), objText);
         } catch (ObjWriterException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -256,6 +300,20 @@ public class GuiController {
         }
     }
 
+    // Переключение активной модели (для пункта 2)
+    @FXML
+    private void onSelectNextModel() {
+        if (sceneObjects.isEmpty()) return;
+        activeIndex = (activeIndex + 1) % sceneObjects.size();
+    }
+
+    @FXML
+    private void onSelectPrevModel() {
+        if (sceneObjects.isEmpty()) return;
+        activeIndex = (activeIndex - 1 + sceneObjects.size()) % sceneObjects.size();
+    }
+
+    // [Артём] Управление камерой
     @FXML
     public void handleCameraForward(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
@@ -286,51 +344,59 @@ public class GuiController {
         getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
 
+    // ===== Трансформации АКТИВНОЙ модели (пункт 2) =====
+
     @FXML
     private void handleModelScaleUp(ActionEvent actionEvent) {
-        if (mesh != null) {
-            Vector3f s = mesh.getScale();
-            mesh.setScale(new Vector3f(s.x * 1.1f, s.y * 1.1f, s.z * 1.1f));
-        }
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        Vector3f s = active.scale;
+        active.scale.x = s.x * 1.1f;
+        active.scale.y = s.y * 1.1f;
+        active.scale.z = s.z * 1.1f;
     }
 
     @FXML
     private void handleModelScaleDown(ActionEvent actionEvent) {
-        if (mesh != null) {
-            Vector3f s = mesh.getScale();
-            mesh.setScale(new Vector3f(s.x * 0.9f, s.y * 0.9f, s.z * 0.9f));
-        }
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        Vector3f s = active.scale;
+        active.scale.x = s.x * 0.9f;
+        active.scale.y = s.y * 0.9f;
+        active.scale.z = s.z * 0.9f;
     }
 
     @FXML
     private void handleModelRotateLeft(ActionEvent actionEvent) {
-        if (mesh != null) {
-            Vector3f r = mesh.getRotation();
-            mesh.setRotation(new Vector3f(r.x, r.y, r.z - 5));
-        }
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        active.rotationDeg.z -= 5.0f;
     }
 
     @FXML
     private void handleModelRotateRight(ActionEvent actionEvent) {
-        if (mesh != null) {
-            Vector3f r = mesh.getRotation();
-            mesh.setRotation(new Vector3f(r.x, r.y, r.z + 5));
-        }
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        active.rotationDeg.z += 5.0f;
     }
 
     @FXML
     private void handleModelTranslateForward(ActionEvent actionEvent) {
-        if (mesh != null) {
-            Vector3f t = mesh.getTranslation();
-            mesh.setTranslation(new Vector3f(t.x, t.y, t.z - 0.5f));
-        }
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        active.position.z -= 0.5f;
     }
 
     @FXML
     private void handleModelTranslateBackward(ActionEvent actionEvent) {
-        if (mesh != null) {
-            Vector3f t = mesh.getTranslation();
-            mesh.setTranslation(new Vector3f(t.x, t.y, t.z + 0.5f));
-        }
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        active.position.z += 0.5f;
     }
 }

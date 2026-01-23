@@ -17,7 +17,7 @@ import javafx.scene.paint.Color;
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 
 public class RenderEngine {
-
+/*
     public static void render(
             final GraphicsContext graphicsContext,
             final Camera camera,
@@ -42,6 +42,7 @@ public class RenderEngine {
         }
     }
 
+ */
     public static void render(
             final GraphicsContext graphicsContext,
             final Camera camera,
@@ -52,15 +53,17 @@ public class RenderEngine {
             final boolean drawWireframe,
             final Color baseColor,
             final int width,
-            final int height) {
+            final int height,
+            final Matrix4f modelMatrix) {
 
+        // [Дима] Инициализация Z-буфера
         final float[] zBuffer = new float[width * height];
         Arrays.fill(zBuffer, Float.POSITIVE_INFINITY);
 
         final PixelWriter pixelWriter = graphicsContext.getPixelWriter();
         final PixelReader pixelReader = (texture != null) ? texture.getPixelReader() : null;
 
-        Matrix4f modelMatrix = rotateScaleTranslate(mesh.getTranslation(), mesh.getRotation(), mesh.getScale());
+        // [Артём] Подготовка матриц
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
 
@@ -70,23 +73,28 @@ public class RenderEngine {
         graphicsContext.setStroke(Color.BLACK);
 
         final int nPolygons = mesh.polygons.size();
+
         for (int polygonInd = 0; polygonInd < nPolygons; ++polygonInd) {
             final Polygon poly = mesh.polygons.get(polygonInd);
             final ArrayList<Integer> vIdx = poly.getVertexIndices();
+
             if (vIdx.size() != 3) continue;
 
             Vector3f v0 = mesh.vertices.get(vIdx.get(0));
             Vector3f v1 = mesh.vertices.get(vIdx.get(1));
             Vector3f v2 = mesh.vertices.get(vIdx.get(2));
 
+            // [Артём] Проецируем вершины своей математикой
             Vector3f p0ndc = multiplyMatrix4ByVector3(modelViewProjectionMatrix, v0);
             Vector3f p1ndc = multiplyMatrix4ByVector3(modelViewProjectionMatrix, v1);
             Vector3f p2ndc = multiplyMatrix4ByVector3(modelViewProjectionMatrix, v2);
 
+            // [Артём] Переводим в экранные координаты (Vector2f)
             Vector2f p0 = vertexToPoint(p0ndc, width, height);
             Vector2f p1 = vertexToPoint(p1ndc, width, height);
             Vector2f p2 = vertexToPoint(p2ndc, width, height);
 
+// [Дима] Растеризация (Логика Димы, адаптированная под мои типы)
             if (!useTexture && !useLighting) {
                 rasterizeTriangle(
                         p0, p1, p2,
@@ -227,6 +235,8 @@ public class RenderEngine {
         int maxY = clamp((int) Math.ceil (max3(p0.y, p1.y, p2.y)), 0, height - 1);
 
         float area = edge(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
+
+        // Отсечение, если треугольник слишком маленький или вывернут
         if (Math.abs(area) < 1e-5f) return;
 
         for (int y = minY; y <= maxY; y++) {
@@ -247,7 +257,6 @@ public class RenderEngine {
                 float z = a * z0 + b * z1 + c * z2;
 
                 int idx = y * width + x;
-                if (z >= zBuffer[idx]) continue;
 
                 zBuffer[idx] = z;
                 pw.setColor(x, y, color);
@@ -538,7 +547,8 @@ public class RenderEngine {
     }
 
     private static boolean sameSign(float v, float ref) {
-        return (ref > 0) ? (v >= 0) : (v <= 0);
+        if (ref > 0) return v >= 0;
+        return v <= 0;
     }
 
     private static float min3(float a, float b, float c) {
@@ -553,4 +563,20 @@ public class RenderEngine {
         if (v < lo) return lo;
         return Math.min(v, hi);
     }
+    public static void renderCameraIcons(
+            final GraphicsContext graphicsContext,
+            final Camera activeCamera,
+            final ArrayList<Camera> cameras,
+            final int activeCameraIndex,
+            final int width,
+            final int height) {
+
+        if (cameras == null || cameras.isEmpty()) return;
+
+        for (int i = 0; i < cameras.size(); i++) {
+            if (i == activeCameraIndex) continue;
+            drawCameraIcon(graphicsContext, activeCamera, cameras.get(i), width, height);
+        }
+    }
+
 }
