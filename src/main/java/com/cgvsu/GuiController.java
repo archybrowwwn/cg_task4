@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 
 import javafx.scene.control.ListView;
-
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
@@ -26,7 +25,11 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ColorPicker;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -51,11 +54,23 @@ public class GuiController {
 
     private final ArrayList<SceneObject> sceneObjects = new ArrayList<>();
     private int activeIndex = -1;
+    @FXML
+    private CheckBox cbWireframe;
 
-    private Camera camera = new Camera(
-            new Vector3f(0, 0, 100),
-            new Vector3f(0, 0, 0),
-            1.0F, 1, 0.01F, 100);
+    @FXML
+    private CheckBox cbTexture;
+
+    @FXML
+    private CheckBox cbLighting;
+
+    @FXML
+    private ColorPicker fillColorPicker;
+
+    private Model mesh = null;
+    private Image texture = null;
+
+    private final ArrayList<Camera> cameras = new ArrayList<>();
+    private int activeCameraIndex = 0;
 
     private Timeline timeline;
 
@@ -84,6 +99,18 @@ public class GuiController {
         anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
         anchorPane.prefHeightProperty().addListener((ov, oldValue, newValue) -> canvas.setHeight(newValue.doubleValue()));
 
+        if (fillColorPicker != null) {
+            fillColorPicker.setValue(Color.LIGHTGRAY);
+        }
+
+        if (cameras.isEmpty()) {
+            cameras.add(new Camera(
+                    new Vector3f(0, 0, 100),
+                    new Vector3f(0, 0, 0),
+                    1.0F, 1, 0.01F, 100));
+            activeCameraIndex = 0;
+        }
+
         timeline = new Timeline();
         timeline.setCycleCount(Animation.INDEFINITE);
 
@@ -94,26 +121,102 @@ public class GuiController {
             if (width <= 1 || height <= 1) return;
 
             canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
-
-            camera.setAspectRatio((float) (width / height));
+            getActiveCamera().setAspectRatio((float) (width / height));
 
             for (SceneObject obj : sceneObjects) {
                 Matrix4f modelMatrix = rotateScaleTranslate(obj.position, obj.rotationDeg, obj.scale);
-                RenderEngine.render(canvas.getGraphicsContext2D(), camera, obj.getModel(),
-                        (int) width, (int) height, modelMatrix);
-            }
-        });
 
+                boolean drawWireframe = cbWireframe != null && cbWireframe.isSelected();
+                boolean useTexture = cbTexture != null && cbTexture.isSelected();
+                boolean useLighting = cbLighting != null && cbLighting.isSelected();
+
+                Color baseColor = (fillColorPicker != null && fillColorPicker.getValue() != null)
+                        ? fillColorPicker.getValue()
+                        : Color.LIGHTGRAY;
+
+                RenderEngine.render(
+                        canvas.getGraphicsContext2D(),
+                        getActiveCamera(),
+                        obj.getModel(),
+                        texture,
+                        useTexture,
+                        useLighting,
+                        drawWireframe,
+                        baseColor,
+                        (int) width,
+                        (int) height,
+                        modelMatrix
+                );
+            }
+            RenderEngine.renderCameraIcons(
+                    canvas.getGraphicsContext2D(),
+                    getActiveCamera(),
+                    cameras,
+                    activeCameraIndex,
+                    (int) width,
+                    (int) height
+            );
+
+            modelsListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldVal, newVal) -> {
+                int idx = newVal.intValue();
+                if (idx >= 0 && idx < sceneObjects.size()) {
+                    activeIndex = idx;
+                    refreshPolygonsList();
+                }
+            });
+        });
         timeline.getKeyFrames().add(frame);
         timeline.play();
 
-        modelsListView.getSelectionModel().selectedIndexProperty().addListener((obs, oldVal, newVal) -> {
-            int idx = newVal.intValue();
-            if (idx >= 0 && idx < sceneObjects.size()) {
-                activeIndex = idx;
-                refreshPolygonsList();
-            }
-        });
+    }
+
+    private Camera getActiveCamera() {
+        if (cameras.isEmpty()) {
+            cameras.add(new Camera(
+                    new Vector3f(0, 0, 100),
+                    new Vector3f(0, 0, 0),
+                    1.0F, 1, 0.01F, 100));
+            activeCameraIndex = 0;
+        }
+        if (activeCameraIndex < 0) activeCameraIndex = 0;
+        if (activeCameraIndex >= cameras.size()) activeCameraIndex = cameras.size() - 1;
+        return cameras.get(activeCameraIndex);
+    }
+
+    @FXML
+    private void onAddCameraMenuItemClick() {
+        Camera c = getActiveCamera();
+        Vector3f pos = c.getPosition();
+        Vector3f tgt = c.getTarget();
+
+        cameras.add(new Camera(
+                new Vector3f(pos.x + 5f, pos.y + 5f, pos.z + 5f),
+                new Vector3f(tgt.x, tgt.y, tgt.z),
+                c.getFov(),
+                c.getAspectRatio(),
+                c.getNearPlane(),
+                c.getFarPlane()
+        ));
+        activeCameraIndex = cameras.size() - 1;
+    }
+
+    @FXML
+    private void onRemoveCameraMenuItemClick() {
+        if (cameras.size() <= 1) return;
+        cameras.remove(activeCameraIndex);
+        if (activeCameraIndex >= cameras.size()) activeCameraIndex = cameras.size() - 1;
+    }
+
+    @FXML
+    private void onNextCameraMenuItemClick() {
+        if (cameras.isEmpty()) return;
+        activeCameraIndex = (activeCameraIndex + 1) % cameras.size();
+    }
+
+    @FXML
+    private void onPrevCameraMenuItemClick() {
+        if (cameras.isEmpty()) return;
+        activeCameraIndex = (activeCameraIndex - 1 + cameras.size()) % cameras.size();
     }
 
     @FXML
@@ -133,6 +236,8 @@ public class GuiController {
             String fileContent = Files.readString(fileName);
             Model loaded = ObjReader.read(fileContent);
 
+            // [Дима] Триангуляция и пересчет нормалей
+            // Это критически важно для работы Z-буфера
             try {
                 ModelPreprocessor.triangulate(loaded);
                 ModelPreprocessor.recalculateNormals(loaded);
@@ -158,6 +263,29 @@ public class GuiController {
         }
     }
 
+    @FXML
+    private void onOpenTextureMenuItemClick() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Image (*.png, *.jpg, *.jpeg)", "*.png", "*.jpg", "*.jpeg")
+        );
+        fileChooser.setTitle("Load Texture");
+
+        File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
+        if (file == null) return;
+
+        try {
+            texture = new Image(file.toURI().toString());
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Could not load texture");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    // [Илья] Метод сохранения активной модели
     @FXML
     private void onSaveModelMenuItemClick() {
         SceneObject active = getActiveObject();
@@ -273,12 +401,10 @@ public class GuiController {
             alert.showAndWait();
         }
     }
-
-
+    // Переключение активной модели (для пункта 2)
     @FXML
     private void onSelectNextModel() {
         if (sceneObjects.isEmpty()) return;
-
         activeIndex = (activeIndex + 1) % sceneObjects.size();
         modelsListView.getSelectionModel().select(activeIndex);
         refreshPolygonsList();
@@ -287,41 +413,43 @@ public class GuiController {
     @FXML
     private void onSelectPrevModel() {
         if (sceneObjects.isEmpty()) return;
-
         activeIndex = (activeIndex - 1 + sceneObjects.size()) % sceneObjects.size();
         modelsListView.getSelectionModel().select(activeIndex);
         refreshPolygonsList();
     }
 
+    // [Артём] Управление камерой
     @FXML
     public void handleCameraForward(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
+        getActiveCamera().movePosition(new Vector3f(0, 0, -TRANSLATION));
     }
 
     @FXML
     private void handleCameraBackward(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, 0, TRANSLATION));
+        getActiveCamera().movePosition(new Vector3f(0, 0, TRANSLATION));
     }
 
     @FXML
     private void handleCameraLeft(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(TRANSLATION, 0, 0));
+        getActiveCamera().movePosition(new Vector3f(TRANSLATION, 0, 0));
     }
 
     @FXML
     private void handleCameraRight(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(-TRANSLATION, 0, 0));
+        getActiveCamera().movePosition(new Vector3f(-TRANSLATION, 0, 0));
     }
 
     @FXML
-    public void handleCameraUp(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, TRANSLATION, 0));
+    private void handleCameraUp(ActionEvent actionEvent) {
+        getActiveCamera().movePosition(new Vector3f(0, TRANSLATION, 0));
     }
 
     @FXML
     private void handleCameraDown(ActionEvent actionEvent) {
-        camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
+        getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
+
+// ===== Трансформации АКТИВНОЙ модели (пункт 2) =====
 
     @FXML
     private void handleModelScaleUp(ActionEvent actionEvent) {
@@ -376,4 +504,5 @@ public class GuiController {
 
         active.position.z += 0.5f;
     }
+
 }
