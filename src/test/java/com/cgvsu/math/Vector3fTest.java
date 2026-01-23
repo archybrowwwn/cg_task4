@@ -45,4 +45,34 @@ public class Vector3fTest {
         assertEquals(0, result.y, EPS);
         assertEquals(1, result.z, EPS);
     }
+
+    @Test
+    void testSubtract() {
+        Vector3f v1 = new Vector3f(5, 6, 7);
+        Vector3f v2 = new Vector3f(1, 2, 3);
+        Vector3f result = v1.subtract(v2);
+
+        assertEquals(4, result.x, EPS);
+        assertEquals(4, result.y, EPS);
+        assertEquals(4, result.z, EPS);
+    }
+
+    @Test
+    void testMultiply() {
+        Vector3f v = new Vector3f(1, 2, 3);
+        Vector3f result = v.multiply(2.5f);
+
+        assertEquals(2.5f, result.x, EPS);
+        assertEquals(5.0f, result.y, EPS);
+        assertEquals(7.5f, result.z, EPS);
+    }
+
+    @Test
+    void testDotProduct() {
+        Vector3f v1 = new Vector3f(1, 2, 3);
+        Vector3f v2 = new Vector3f(4, 5, 6);
+        float result = v1.dot(v2);
+
+        assertEquals(32, result, EPS);
+    }
 }
