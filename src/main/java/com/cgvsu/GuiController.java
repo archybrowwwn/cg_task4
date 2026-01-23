@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+
 import javafx.scene.control.ListView;
+
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
@@ -44,6 +46,9 @@ public class GuiController {
     @FXML
     private ListView<String> modelsListView;
 
+    @FXML
+    private ListView<String> polygonsListView;
+
     private final ArrayList<SceneObject> sceneObjects = new ArrayList<>();
     private int activeIndex = -1;
 
@@ -59,6 +64,21 @@ public class GuiController {
         return sceneObjects.get(activeIndex);
     }
 
+    private void refreshPolygonsList() {
+        polygonsListView.getItems().clear();
+
+        SceneObject active = getActiveObject();
+        if (active == null) return;
+
+        Model m = active.getModel();
+        if (m == null) return;
+
+        for (int i = 0; i < m.polygons.size(); i++) {
+            polygonsListView.getItems().add("Polygon #" + i);
+        }
+    }
+
+
     @FXML
     private void initialize() {
         anchorPane.prefWidthProperty().addListener((ov, oldValue, newValue) -> canvas.setWidth(newValue.doubleValue()));
@@ -71,12 +91,16 @@ public class GuiController {
             double width = canvas.getWidth();
             double height = canvas.getHeight();
 
+            if (width <= 1 || height <= 1) return;
+
             canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
+
             camera.setAspectRatio((float) (width / height));
 
             for (SceneObject obj : sceneObjects) {
                 Matrix4f modelMatrix = rotateScaleTranslate(obj.position, obj.rotationDeg, obj.scale);
-                RenderEngine.render(canvas.getGraphicsContext2D(), camera, obj.getModel(), (int) width, (int) height, modelMatrix);
+                RenderEngine.render(canvas.getGraphicsContext2D(), camera, obj.getModel(),
+                        (int) width, (int) height, modelMatrix);
             }
         });
 
@@ -87,6 +111,7 @@ public class GuiController {
             int idx = newVal.intValue();
             if (idx >= 0 && idx < sceneObjects.size()) {
                 activeIndex = idx;
+                refreshPolygonsList();
             }
         });
     }
@@ -108,8 +133,6 @@ public class GuiController {
             String fileContent = Files.readString(fileName);
             Model loaded = ObjReader.read(fileContent);
 
-            // [Дима] Триангуляция и пересчет нормалей
-            // Это критически важно для работы Z-буфера
             try {
                 ModelPreprocessor.triangulate(loaded);
                 ModelPreprocessor.recalculateNormals(loaded);
@@ -124,6 +147,8 @@ public class GuiController {
             modelsListView.getItems().add(obj.getName());
             modelsListView.getSelectionModel().select(activeIndex);
 
+            refreshPolygonsList();
+
         } catch (IOException exception) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Error");
@@ -133,7 +158,6 @@ public class GuiController {
         }
     }
 
-    // [Илья] Метод сохранения активной модели
     @FXML
     private void onSaveModelMenuItemClick() {
         SceneObject active = getActiveObject();
@@ -171,20 +195,104 @@ public class GuiController {
         }
     }
 
-    // Переключение активной модели (для пункта 2)
+    @FXML
+    private void onDeleteSelectedPolygon() {
+        try {
+            if (polygonsListView == null) {
+                Alert a = new Alert(Alert.AlertType.ERROR, "polygonsListView is null (fx:id mismatch).");
+                a.showAndWait();
+                return;
+            }
+
+            SceneObject active = getActiveObject();
+            if (active == null) {
+                Alert a = new Alert(Alert.AlertType.WARNING, "No active model.");
+                a.showAndWait();
+                return;
+            }
+
+            Model m = active.getModel();
+            if (m == null) {
+                Alert a = new Alert(Alert.AlertType.WARNING, "Active model is null.");
+                a.showAndWait();
+                return;
+            }
+
+            int idx = polygonsListView.getSelectionModel().getSelectedIndex();
+
+            // fallback: парсим из строки "Polygon #123"
+            if (idx < 0) {
+                String item = polygonsListView.getSelectionModel().getSelectedItem();
+                if (item != null && item.startsWith("Polygon #")) {
+                    try {
+                        idx = Integer.parseInt(item.substring("Polygon #".length()).trim());
+                    } catch (NumberFormatException ignored) {
+                        idx = -1;
+                    }
+                }
+            }
+
+            if (idx < 0) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Delete Polygon");
+                alert.setHeaderText("No polygon selected");
+                alert.setContentText("Select a polygon in the list first.");
+                alert.showAndWait();
+                return;
+            }
+
+            int before = m.polygons.size();
+
+            com.cgvsu.model.ModelEditor.deletePolygon(m, idx);
+
+            int after = m.polygons.size();
+
+            try {
+                ModelPreprocessor.recalculateNormals(m);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            refreshPolygonsList();
+
+            // визуально: выделим следующий элемент, чтобы было понятно что список обновился
+            if (after > 0) {
+                int select = idx;
+                if (select >= after) select = after - 1;
+                polygonsListView.getSelectionModel().select(select);
+            }
+
+            System.out.println("Deleted polygon " + idx + " | polygons: " + before + " -> " + after);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Delete Polygon Error");
+            alert.setHeaderText("Exception while deleting polygon");
+            alert.setContentText(e.toString());
+            alert.showAndWait();
+        }
+    }
+
+
     @FXML
     private void onSelectNextModel() {
         if (sceneObjects.isEmpty()) return;
+
         activeIndex = (activeIndex + 1) % sceneObjects.size();
+        modelsListView.getSelectionModel().select(activeIndex);
+        refreshPolygonsList();
     }
 
     @FXML
     private void onSelectPrevModel() {
         if (sceneObjects.isEmpty()) return;
+
         activeIndex = (activeIndex - 1 + sceneObjects.size()) % sceneObjects.size();
+        modelsListView.getSelectionModel().select(activeIndex);
+        refreshPolygonsList();
     }
 
-    // [Артём] Управление камерой
     @FXML
     public void handleCameraForward(ActionEvent actionEvent) {
         camera.movePosition(new Vector3f(0, 0, -TRANSLATION));
@@ -214,8 +322,6 @@ public class GuiController {
     private void handleCameraDown(ActionEvent actionEvent) {
         camera.movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
-
-    // ===== Трансформации АКТИВНОЙ модели (пункт 2) =====
 
     @FXML
     private void handleModelScaleUp(ActionEvent actionEvent) {
