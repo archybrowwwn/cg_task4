@@ -6,7 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-import javafx.scene.control.ListView;
+import com.cgvsu.objreader.ObjReaderException;
+import javafx.scene.control.*;
 import com.cgvsu.math.Matrix4f;
 import com.cgvsu.math.Vector3f;
 import com.cgvsu.model.Model;
@@ -26,14 +27,11 @@ import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Alert;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ColorPicker;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -483,7 +481,11 @@ public class GuiController {
                 ModelPreprocessor.triangulate(loaded);
                 ModelPreprocessor.recalculateNormals(loaded);
             } catch (Exception e) {
-                e.printStackTrace();
+                showExceptionAlert(
+                        "Could not preprocess model",
+                        "Model loaded, but preprocessing failed",
+                        e
+                );
             }
 
             SceneObject obj = new SceneObject(loaded, file.getName());
@@ -495,12 +497,14 @@ public class GuiController {
 
             refreshPolygonsList();
 
+        } catch (ObjReaderException exception) {
+            // Некорректный OBJ — покажем ошибку и дадим пользователю продолжить работу.
+            showExceptionAlert("Could not load model", "Invalid OBJ file", exception);
         } catch (IOException exception) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("Could not load model");
-            alert.setContentText(exception.getMessage());
-            alert.showAndWait();
+            showExceptionAlert("Could not load model", "I/O error while reading file", exception);
+        } catch (Exception exception) {
+            // Любая другая неожиданная ошибка — тоже в диалог, без падения приложения.
+            showExceptionAlert("Could not load model", "Unexpected error", exception);
         }
     }
 
@@ -773,5 +777,42 @@ public class GuiController {
         if (active == null) return;
 
         active.position.z += 0.5f;
+    }
+
+    private void showExceptionAlert(final String title, final String header, final Throwable exception) {
+        final Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+
+        final String message = (exception == null || exception.getMessage() == null)
+                ? "(no details)"
+                : exception.getMessage();
+        alert.setContentText(message);
+
+        if (exception != null) {
+            // Stacktrace in expandable area
+            final StringBuilder sb = new StringBuilder();
+            sb.append(exception.getClass().getName()).append("\n\n");
+            for (StackTraceElement el : exception.getStackTrace()) {
+                sb.append(el.toString()).append("\n");
+            }
+
+            final Label label = new Label("Details:");
+            final TextArea textArea = new TextArea(sb.toString());
+            textArea.setEditable(false);
+            textArea.setWrapText(false);
+            textArea.setMaxWidth(Double.MAX_VALUE);
+            textArea.setMaxHeight(Double.MAX_VALUE);
+            GridPane.setVgrow(textArea, Priority.ALWAYS);
+            GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+            final GridPane expContent = new GridPane();
+            expContent.setMaxWidth(Double.MAX_VALUE);
+            expContent.add(label, 0, 0);
+            expContent.add(textArea, 0, 1);
+            alert.getDialogPane().setExpandableContent(expContent);
+        }
+
+        alert.showAndWait();
     }
 }
