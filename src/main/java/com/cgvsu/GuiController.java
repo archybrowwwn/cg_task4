@@ -713,6 +713,7 @@ public class GuiController {
         if (active == null) return;
 
         Vector3f s = active.scale;
+
         active.scale.x = s.x * 1.1f;
         active.scale.y = s.y * 1.1f;
         active.scale.z = s.z * 1.1f;
