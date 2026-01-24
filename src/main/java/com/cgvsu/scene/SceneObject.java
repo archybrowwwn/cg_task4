@@ -7,9 +7,9 @@ public class SceneObject {
     private final Model model;
     private final String name;
 
-    public final Vector3f position = new Vector3f(0, 0, 0);
-    public final Vector3f rotationDeg = new Vector3f(0, 0, 0);
-    public final Vector3f scale = new Vector3f(1, 1, 1);
+    public Vector3f position = new Vector3f(0, 0, 0);
+    public Vector3f rotationDeg = new Vector3f(0, 0, 0);
+    public Vector3f scale = new Vector3f(1, 1, 1);
 
     public SceneObject(Model model, String name) {
         this.model = model;

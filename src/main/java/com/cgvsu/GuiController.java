@@ -35,7 +35,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import static com.cgvsu.render_engine.GraphicConveyor.rotateScaleTranslate;
@@ -272,7 +271,7 @@ public class GuiController {
 
                 if (event.getCode() == KeyCode.EQUALS || event.getCode() == KeyCode.PLUS || event.getCode() == KeyCode.ADD) {
                     handleCameraForward(null);
-                    event.consume(); // важно: глушим, чтобы accelerator не сработал
+                    event.consume();
                 } else if (event.getCode() == KeyCode.MINUS || event.getCode() == KeyCode.SUBTRACT) {
                     handleCameraBackward(null);
                     event.consume();
@@ -464,7 +463,7 @@ public class GuiController {
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
         fileChooser.setTitle("Load Model");
 
-        File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
+        File file = fileChooser.showOpenDialog(canvas.getScene().getWindow());
         if (file == null) {
             return;
         }
@@ -516,7 +515,7 @@ public class GuiController {
         );
         fileChooser.setTitle("Load Texture");
 
-        File file = fileChooser.showOpenDialog((Stage) canvas.getScene().getWindow());
+        File file = fileChooser.showOpenDialog(canvas.getScene().getWindow());
         if (file == null) return;
 
         try {
@@ -547,7 +546,7 @@ public class GuiController {
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Model (*.obj)", "*.obj"));
         fileChooser.setTitle("Save Model");
 
-        File file = fileChooser.showSaveDialog((Stage) canvas.getScene().getWindow());
+        File file = fileChooser.showSaveDialog(canvas.getScene().getWindow());
         if (file == null) return;
 
         try {
@@ -790,7 +789,6 @@ public class GuiController {
         alert.setContentText(message);
 
         if (exception != null) {
-            // Stacktrace in expandable area
             final StringBuilder sb = new StringBuilder();
             sb.append(exception.getClass().getName()).append("\n\n");
             for (StackTraceElement el : exception.getStackTrace()) {

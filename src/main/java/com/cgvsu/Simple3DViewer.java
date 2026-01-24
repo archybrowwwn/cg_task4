@@ -9,7 +9,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Objects;
 import javafx.scene.Parent;
-import java.util.Objects;
 
 
 public class Simple3DViewer extends Application {
