@@ -90,4 +90,28 @@ class Matrix4fTest {
         Assertions.assertEquals(1, res.y, EPS);
         Assertions.assertEquals(0, res.z, EPS);
     }
+
+    @Test
+    void testRotationX() {
+        Vector3f v = new Vector3f(0, 1, 0);
+
+        Matrix4f r = Matrix4f.rotateX((float) (Math.PI / 2));
+        Vector3f res = Matrix4f.multiply(r, v);
+
+        Assertions.assertEquals(0, res.x, EPS);
+        Assertions.assertEquals(0, res.y, EPS);
+        Assertions.assertEquals(1, res.z, EPS);
+    }
+
+    @Test
+    void testRotationY() {
+        Vector3f v = new Vector3f(1, 0, 0);
+
+        Matrix4f r = Matrix4f.rotateY((float) (Math.PI / 2));
+        Vector3f res = Matrix4f.multiply(r, v);
+
+        Assertions.assertEquals(0, res.x, EPS);
+        Assertions.assertEquals(0, res.y, EPS);
+        Assertions.assertEquals(-1, res.z, EPS);
+    }
 }

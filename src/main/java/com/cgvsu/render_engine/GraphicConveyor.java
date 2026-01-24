@@ -8,10 +8,14 @@ public class GraphicConveyor {
 
     public static Matrix4f rotateScaleTranslate(Vector3f translation, Vector3f rotation, Vector3f scale) {
         Matrix4f scaleMatrix = Matrix4f.scale(scale.x, scale.y, scale.z);
+        // добавил перевод в радианы, что бы модель нормально вращалась
+        float rx = (float) Math.toRadians(rotation.x);
+        float ry = (float) Math.toRadians(rotation.y);
+        float rz = (float) Math.toRadians(rotation.z);
 
-        Matrix4f rotateXMatrix = Matrix4f.rotateX(rotation.x);
-        Matrix4f rotateYMatrix = Matrix4f.rotateY(rotation.y);
-        Matrix4f rotateZMatrix = Matrix4f.rotateZ(rotation.z);
+        Matrix4f rotateXMatrix = Matrix4f.rotateX(rx);
+        Matrix4f rotateYMatrix = Matrix4f.rotateY(ry);
+        Matrix4f rotateZMatrix = Matrix4f.rotateZ(rz);
 
         Matrix4f rotationMatrix = Matrix4f.multiply(rotateZMatrix, Matrix4f.multiply(rotateYMatrix, rotateXMatrix));
 
