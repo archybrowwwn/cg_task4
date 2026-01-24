@@ -228,6 +228,7 @@ public class RenderEngine {
                 float z = a * z0 + b * z1 + c * z2;
 
                 int idx = y * width + x;
+                if (z >= zBuffer[idx]) continue;
 
                 zBuffer[idx] = z;
                 pw.setColor(x, y, color);
