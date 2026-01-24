@@ -68,7 +68,6 @@ public class GuiController {
     @FXML
     private ColorPicker fillColorPicker;
 
-    private Model mesh = null;
     private Image texture = null;
 
     private final ArrayList<Camera> cameras = new ArrayList<>();

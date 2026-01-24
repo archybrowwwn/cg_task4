@@ -17,32 +17,7 @@ import javafx.scene.paint.Color;
 import static com.cgvsu.render_engine.GraphicConveyor.*;
 
 public class RenderEngine {
-/*
-    public static void render(
-            final GraphicsContext graphicsContext,
-            final Camera camera,
-            final ArrayList<Camera> cameras,
-            final int activeCameraIndex,
-            final Model mesh,
-            final Image texture,
-            final boolean useTexture,
-            final boolean useLighting,
-            final boolean drawWireframe,
-            final Color baseColor,
-            final int width,
-            final int height) {
 
-        render(graphicsContext, camera, mesh, texture, useTexture, useLighting, drawWireframe, baseColor, width, height);
-
-        if (cameras == null || cameras.isEmpty()) return;
-
-        for (int i = 0; i < cameras.size(); i++) {
-            if (i == activeCameraIndex) continue;
-            drawCameraIcon(graphicsContext, camera, cameras.get(i), width, height);
-        }
-    }
-
- */
     public static void render(
             final GraphicsContext graphicsContext,
             final Camera camera,
