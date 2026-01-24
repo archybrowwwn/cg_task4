@@ -111,7 +111,6 @@ public class GuiController {
 
     private Timeline timeline;
 
-    // [Артём [Task 5]] Переменные для мыши
     private float lastX;
     private float lastY;
     private final float MOUSE_SENSITIVITY = 0.01f;
@@ -309,7 +308,6 @@ public class GuiController {
             });
         }
 
-        // [Артём [Task 5]] Обработка клика мыши
         canvas.setFocusTraversable(true);
         canvas.setOnMousePressed(event -> {
             lastX = (float) event.getX();
@@ -338,7 +336,6 @@ public class GuiController {
             lastY = y;
         });
 
-        // [Артём [Task 5]] Вращение камеры мышью
         canvas.setOnKeyPressed(event -> {
 
             if (event.getCode() == KeyCode.W) handleCameraForward(null);
@@ -474,8 +471,6 @@ public class GuiController {
             String fileContent = Files.readString(fileName);
             Model loaded = ObjReader.read(fileContent);
 
-            // [Дима] Триангуляция и пересчет нормалей
-            // Это критически важно для работы Z-буфера
             try {
                 ModelPreprocessor.triangulate(loaded);
                 ModelPreprocessor.recalculateNormals(loaded);
@@ -497,12 +492,10 @@ public class GuiController {
             refreshPolygonsList();
 
         } catch (ObjReaderException exception) {
-            // Некорректный OBJ — покажем ошибку и дадим пользователю продолжить работу.
             showExceptionAlert("Could not load model", "Invalid OBJ file", exception);
         } catch (IOException exception) {
             showExceptionAlert("Could not load model", "I/O error while reading file", exception);
         } catch (Exception exception) {
-            // Любая другая неожиданная ошибка — тоже в диалог, без падения приложения.
             showExceptionAlert("Could not load model", "Unexpected error", exception);
         }
     }
@@ -529,7 +522,6 @@ public class GuiController {
         }
     }
 
-    // [Илья] Метод сохранения активной модели
     @FXML
     private void onSaveModelMenuItemClick() {
         SceneObject active = getActiveObject();
@@ -644,7 +636,6 @@ public class GuiController {
         }
     }
 
-    // Переключение активной модели (для пункта 2)
     @FXML
     private void onSelectNextModel() {
         if (sceneObjects.isEmpty()) return;
@@ -661,7 +652,6 @@ public class GuiController {
         refreshPolygonsList();
     }
 
-    // !!! [Артём] ОБНОВЛЕНИЕ Управление камерой
 
     @FXML
     public void handleCameraForward(ActionEvent actionEvent) {
@@ -702,9 +692,6 @@ public class GuiController {
     private void handleCameraDown(ActionEvent actionEvent) {
         getActiveCamera().movePosition(new Vector3f(0, -TRANSLATION, 0));
     }
-
-
-    // !!! [Артём] Новый метод
 
     private void handleCameraRotation(float dYaw, float dPitch) {
         Camera camera = getActiveCamera();

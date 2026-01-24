@@ -1,14 +1,5 @@
 package com.cgvsu.math;
 
-/**
- * MATH LIBRARY (Артём)
- * -------------------------------------------
- * Реализация матрицы 4x4.
- * Включает методы для создания единичной матрицы,
- * аффинных преобразований (Translation, Rotation, Scale)
- * и умножения матриц. Основа для выполнения 3-го задания.
- */
-
 import java.util.Arrays;
 public class Matrix4f {
 
@@ -27,7 +18,7 @@ public class Matrix4f {
         this.m = m;
     }
 
-    // [Task 3] Метод для создания единичной матрицы
+
     public static Matrix4f identity() {
         return new Matrix4f();
     }
@@ -76,7 +67,7 @@ public class Matrix4f {
         return result;
     }
 
-    // [Task 3] Матрица Перемещения (Translation)
+
     public static Matrix4f translation(float tx, float ty, float tz) {
         Matrix4f matrix = new Matrix4f();
         matrix.set(0, 3, tx);
@@ -85,7 +76,6 @@ public class Matrix4f {
         return matrix;
     }
 
-    // [Task 3] Матрица Масштабирования (Scale)
     public static Matrix4f scale(float sx, float sy, float sz) {
         Matrix4f matrix = new Matrix4f();
         matrix.set(0, 0, sx);
@@ -94,7 +84,6 @@ public class Matrix4f {
         return matrix;
     }
 
-    // [Task 3] Поворот вокруг оси X
     public static Matrix4f rotateX(float angleRadians) {
         Matrix4f matrix = new Matrix4f();
         float cos = (float) Math.cos(angleRadians);
@@ -106,7 +95,6 @@ public class Matrix4f {
         return matrix;
     }
 
-    // [Task 3] Поворот вокруг оси Y
     public static Matrix4f rotateY(float angleRadians) {
         Matrix4f matrix = new Matrix4f();
         float cos = (float) Math.cos(angleRadians);
@@ -118,7 +106,6 @@ public class Matrix4f {
         return matrix;
     }
 
-    // [Task 3] Поворот вокруг оси Z
     public static Matrix4f rotateZ(float angleRadians) {
         Matrix4f matrix = new Matrix4f();
         float cos = (float) Math.cos(angleRadians);
