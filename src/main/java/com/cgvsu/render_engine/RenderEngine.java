@@ -31,14 +31,12 @@ public class RenderEngine {
             final int height,
             final Matrix4f modelMatrix) {
 
-        // [Дима] Инициализация Z-буфера
         final float[] zBuffer = new float[width * height];
         Arrays.fill(zBuffer, Float.POSITIVE_INFINITY);
 
         final PixelWriter pixelWriter = graphicsContext.getPixelWriter();
         final PixelReader pixelReader = (texture != null) ? texture.getPixelReader() : null;
 
-        // [Артём] Подготовка матриц
         Matrix4f viewMatrix = camera.getViewMatrix();
         Matrix4f projectionMatrix = camera.getProjectionMatrix();
 
@@ -59,17 +57,16 @@ public class RenderEngine {
             Vector3f v1 = mesh.vertices.get(vIdx.get(1));
             Vector3f v2 = mesh.vertices.get(vIdx.get(2));
 
-            // [Артём] Проецируем вершины своей математикой
+
             Vector3f p0ndc = multiplyMatrix4ByVector3(modelViewProjectionMatrix, v0);
             Vector3f p1ndc = multiplyMatrix4ByVector3(modelViewProjectionMatrix, v1);
             Vector3f p2ndc = multiplyMatrix4ByVector3(modelViewProjectionMatrix, v2);
 
-            // [Артём] Переводим в экранные координаты (Vector2f)
+
             Vector2f p0 = vertexToPoint(p0ndc, width, height);
             Vector2f p1 = vertexToPoint(p1ndc, width, height);
             Vector2f p2 = vertexToPoint(p2ndc, width, height);
 
-// [Дима] Растеризация (Логика Димы, адаптированная под мои типы)
             if (!useTexture && !useLighting) {
                 rasterizeTriangle(
                         p0, p1, p2,
@@ -211,7 +208,6 @@ public class RenderEngine {
 
         float area = edge(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y);
 
-        // Отсечение, если треугольник слишком маленький или вывернут
         if (Math.abs(area) < 1e-5f) return;
 
         for (int y = minY; y <= maxY; y++) {

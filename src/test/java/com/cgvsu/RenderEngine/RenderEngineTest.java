@@ -43,7 +43,7 @@ class RenderEngineTest {
                 throw new IllegalStateException("JavaFX Platform failed to start");
             }
         } catch (IllegalStateException alreadyStarted) {
-            // JavaFX уже инициализирован в этом JVM — нормально.
+
         }
 
         fxStarted = true;
@@ -90,10 +90,7 @@ class RenderEngineTest {
         return res.get();
     }
 
-    /**
-     * ВАЖНО: камера должна смотреть на объект.
-     * В прошлой версии position/target могли стать одинаковыми, из-за этого ничего не рисовалось.
-     */
+
     private static Camera newCameraOrFail(int w, int h) {
         try {
             Vector3f position = new Vector3f(0, 0, 3);
@@ -104,38 +101,31 @@ class RenderEngineTest {
             float near = 0.1f;
             float far = 100.0f;
 
-            // Если у вас FOV в градусах — поставь 60f вместо радиан.
             float fov = (float) Math.toRadians(60);
 
-            // 1) Пытаемся подобрать подходящий конструктор
             for (Constructor<?> c : Camera.class.getDeclaredConstructors()) {
                 c.setAccessible(true);
                 Class<?>[] p = c.getParameterTypes();
 
-                // Camera(Vector3f pos, Vector3f target)
                 if (p.length == 2 && p[0] == Vector3f.class && p[1] == Vector3f.class) {
                     return (Camera) c.newInstance(position, target);
                 }
 
-                // Camera(Vector3f pos, Vector3f target, Vector3f up)
                 if (p.length == 3 && p[0] == Vector3f.class && p[1] == Vector3f.class && p[2] == Vector3f.class) {
                     return (Camera) c.newInstance(position, target, up);
                 }
 
-                // Camera(Vector3f pos, Vector3f target, float fov, float aspect, float near, float far)
                 if (p.length == 6 && p[0] == Vector3f.class && p[1] == Vector3f.class
                         && p[2] == float.class && p[3] == float.class && p[4] == float.class && p[5] == float.class) {
                     return (Camera) c.newInstance(position, target, fov, aspect, near, far);
                 }
 
-                // Camera(Vector3f pos, Vector3f target, Vector3f up, float fov, float aspect, float near, float far)
                 if (p.length == 7 && p[0] == Vector3f.class && p[1] == Vector3f.class && p[2] == Vector3f.class
                         && p[3] == float.class && p[4] == float.class && p[5] == float.class && p[6] == float.class) {
                     return (Camera) c.newInstance(position, target, up, fov, aspect, near, far);
                 }
             }
 
-            // 2) Если не нашли нужный конструктор — создаём как получится и пробуем сеттеры
             Constructor<?> any = Camera.class.getDeclaredConstructors()[0];
             any.setAccessible(true);
             Camera cam = (Camera) any.newInstance(new Object[any.getParameterCount()]);
@@ -168,7 +158,7 @@ class RenderEngineTest {
             m.setAccessible(true);
             m.invoke(obj, arg);
         } catch (NoSuchMethodException ignored) {
-            // нет такого сеттера — пропускаем
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -177,7 +167,6 @@ class RenderEngineTest {
     private static Model modelTriangleNoNormalsNoUV() {
         Model m = new Model();
 
-        // Эти поля у вас, судя по коду, публичные:
         m.vertices = new ArrayList<>();
         m.polygons = new ArrayList<>();
         m.normals = new ArrayList<>();

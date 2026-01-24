@@ -1,12 +1,5 @@
 package com.cgvsu.math;
 
-/**
- * MATH LIBRARY (Артём)
- * -------------------------------------------
- * Реализация вектора размерности 3.
- * Основной класс для математических вычислений в движке.
- */
-
 public class Vector3f {
     public float x, y, z;
     public static final float EPS = 1e-7f;

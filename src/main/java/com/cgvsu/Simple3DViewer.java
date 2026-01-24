@@ -18,13 +18,9 @@ public class Simple3DViewer extends Application {
     public void start(Stage stage) throws IOException {
         Parent root = FXMLLoader.load(Objects.requireNonNull(Simple3DViewer.class.getResource("/com/cgvsu/fxml/gui.fxml")));
 
-
         Scene scene = new Scene(root);
-
         stage.setMinWidth(1600);
         stage.setMinHeight(900);
-
-
 
         stage.setTitle("Simple3DViewer");
         stage.setScene(scene);

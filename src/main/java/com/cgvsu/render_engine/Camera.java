@@ -55,7 +55,6 @@ public class Camera {
         return farPlane;
     }
 
-    // [Артём] Умное перемещение
     public void movePosition(final Vector3f translation) {
         Vector3f forward = Vector3f.subtract(target, position);
 
